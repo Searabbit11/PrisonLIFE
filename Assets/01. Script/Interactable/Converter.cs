@@ -16,6 +16,10 @@ public sealed class Converter : MonoBehaviour
     [SerializeField] private GameObject ingotPrefab;      // 가공 중간 단계 은주괴
     [SerializeField] private GameObject handcuffPrefab;   // 최종 수갑
 
+    [Header("Spawn Rotations")]
+    [SerializeField] private Vector3 ingotSpawnRotation = Vector3.zero;
+    [SerializeField] private Vector3 handcuffSpawnRotation = Vector3.zero;
+
     [Header("Visuals")]
     [SerializeField] private Transform customCubePress;   // 압착기 역할을 할 Cube 오브젝트
 
@@ -99,18 +103,17 @@ public sealed class Converter : MonoBehaviour
         // 가공 쿨다운 체크 및 바닥에 광석이 있는지 확인
         if (Time.time < nextProcessTime || rawOresOnFloor.Count == 0) return;
 
-        // 가장 오래된 광석이 바닥에 도착한 후 지정된 대기 시간을 채웠는지 확인
-        if (Time.time < rawOreArrivalTimes[0] + absorbWaitTime) return;
+        int lastIndex = rawOresOnFloor.Count - 1;
+
+        // 맨 위에 있는 광석이 바닥에 도착한 후 지정된 대기 시간을 채웠는지 확인
+        if (Time.time < rawOreArrivalTimes[lastIndex] + absorbWaitTime) return;
 
         nextProcessTime = Time.time + processCooldown;
 
-        // 가장 오래된 광석(리스트의 첫 번째) 꺼내기
-        GameObject oreToProcess = rawOresOnFloor[0];
-        rawOresOnFloor.RemoveAt(0);
-        rawOreArrivalTimes.RemoveAt(0);
-
-        // 남은 광석들 빈자리 채우기 (앞으로 당김)
-        ReorganizeRawOres();
+        // 가장 위에 있는 광석(리스트의 마지막) 꺼내기
+        GameObject oreToProcess = rawOresOnFloor[lastIndex];
+        rawOresOnFloor.RemoveAt(lastIndex);
+        rawOreArrivalTimes.RemoveAt(lastIndex);
 
         // 바닥에서 제련기 입구(meltPoint)로 점프 후 가공 작업 시작
         Sequence seq = DOTween.Sequence();
@@ -122,22 +125,12 @@ public sealed class Converter : MonoBehaviour
         });
     }
 
-    private void ReorganizeRawOres()
-    {
-        // 리스트에 남은 광석들을 새로운 인덱스에 맞춰 부드럽게 이동시킴
-        for (int i = 0; i < rawOresOnFloor.Count; i++)
-        {
-            Vector3 targetPos = GetRawOrePosition(i);
-            rawOresOnFloor[i].transform.DOMove(targetPos, 0.2f).SetEase(Ease.OutQuad);
-        }
-    }
-
     private void SpawnAndProcessIngot()
     {
         if (ingotPrefab == null) return;
 
         // 제련 완료 후 벨트 시작점에서 주괴 생성
-        GameObject ingot = Instantiate(ingotPrefab, beltStartPoint.position, Quaternion.identity);
+        GameObject ingot = Instantiate(ingotPrefab, beltStartPoint.position, Quaternion.Euler(ingotSpawnRotation));
 
         Sequence seq = DOTween.Sequence();
 
@@ -169,7 +162,7 @@ public sealed class Converter : MonoBehaviour
                     
                     if (handcuffPrefab != null)
                     {
-                        GameObject handcuff = Instantiate(handcuffPrefab, pressPoint.position, Quaternion.identity);
+                        GameObject handcuff = Instantiate(handcuffPrefab, pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
                         MoveToOutput(handcuff);
                     }
                 });
@@ -182,7 +175,7 @@ public sealed class Converter : MonoBehaviour
                 Destroy(ingot);
                 if (handcuffPrefab != null)
                 {
-                    GameObject handcuff = Instantiate(handcuffPrefab, pressPoint.position, Quaternion.identity);
+                    GameObject handcuff = Instantiate(handcuffPrefab, pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
                     MoveToOutput(handcuff);
                 }
             }

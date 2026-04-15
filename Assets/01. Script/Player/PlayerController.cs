@@ -135,4 +135,13 @@ public sealed class PlayerController : MonoBehaviour
             }
         }
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
+        Gizmos.DrawWireSphere(detectPosition, miningDetectionRange);
+    }
+#endif
 }
