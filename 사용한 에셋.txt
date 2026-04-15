@@ -1,0 +1,45 @@
+사용할 에셋
+
+Low Poly Factory Machine Pack Demo
+https://assetstore.unity.com/packages/3d/props/industrial/low-poly-factory-machine-pack-demo-272637
+
+Police Officers with Props v2.0 (수갑이랑 데스크)
+https://assetstore.unity.com/packages/3d/characters/humanoids/humans/police-officers-with-props-v2-0-236153
+
+Lockable Containers: Cages
+https://assetstore.unity.com/packages/3d/props/lockable-containers-cages-347612
+
+Bodyguards (간수)
+https://assetstore.unity.com/packages/3d/characters/humanoids/humans/bodyguards-31711
+
+Human Crafting Animations FREE (곡괭이질 모션)
+https://assetstore.unity.com/packages/3d/animations/human-crafting-animations-free-157920
+
+Low-Poly Forest Survival Starter Pack Lite (곡괭이)
+https://assetstore.unity.com/packages/3d/props/low-poly-forest-survival-starter-pack-lite-334794
+
+Human Basic Motions FREE (걷는 모션)
+https://assetstore.unity.com/packages/3d/animations/human-basic-motions-free-154271
+
+3D Low poly Room Furniture Beds 01 (감옥 침대)
+https://assetstore.unity.com/packages/3d/environments/3d-low-poly-room-furniture-beds-01-225005
+
+Adventure Character (죄수)
+https://assetstore.unity.com/packages/3d/characters/humanoids/humans/adventure-character-201384#description
+
+2D Mobile Game UI Kit
+https://assetstore.unity.com/packages/2d/gui/2d-mobile-game-ui-kit-355774
+
+DOTween (HOTween v2)
+https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676
+
+Joystick Pack
+https://assetstore.unity.com/packages/tools/input-management/joystick-pack-107631#content
+
+Tanks - set pack (드릴)
+https://www.fab.com/listings/2ea5672a-5813-47c9-a9e6-d68902870b8c
+
+3D Cartoon Cute Safe Pack (지폐)
+https://assetstore.unity.com/packages/3d/props/3d-cartoon-cute-safe-pack-297716
+
+AINavigation
