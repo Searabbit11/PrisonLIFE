@@ -4,6 +4,7 @@ using UnityEngine;
 public sealed class PlayerController : MonoBehaviour
 {
     private static readonly int Speed = Animator.StringToHash("Speed");
+    private static readonly int IsMining = Animator.StringToHash("IsMining");
     private const float RotationSpeed = 15f;
     private const float SnappingAngle = 45f;
     private const float MinInputMagnitude = 0.1f;
@@ -15,6 +16,14 @@ public sealed class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private Vector3 moveDirection = Vector3.zero;
     private float currentInputMagnitude = 0f;
+
+    public void SetMiningState(bool isMining)
+    {
+        if (animator == null) return;
+
+        animator.SetBool(IsMining, isMining);
+        Debug.Log($"Mining State: {isMining}");
+    }
 
     private void Awake()
     {
