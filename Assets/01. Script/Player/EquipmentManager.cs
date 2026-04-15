@@ -51,7 +51,20 @@ public sealed class EquipmentManager : MonoBehaviour
         Transform weaponTransform = currentEquippedWeapon.transform;
         weaponTransform.localPosition = DefaultPickaxePos;
         weaponTransform.localRotation = Quaternion.Euler(DefaultPickaxeRot);
+        
+        SetWeaponVisibility(false);
 
         Debug.Log($"Equipped New Weapon: {weaponPrefab.name}");
+    }
+
+    /// <summary>
+    /// 장비의 활성화/비활성화 상태를 제어합니다.
+    /// </summary>
+    public void SetWeaponVisibility(bool visible)
+    {
+        if (currentEquippedWeapon != null && currentEquippedWeapon.activeSelf != visible)
+        {
+            currentEquippedWeapon.SetActive(visible);
+        }
     }
 }

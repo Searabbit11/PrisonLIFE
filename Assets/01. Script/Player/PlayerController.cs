@@ -11,24 +11,35 @@ public sealed class PlayerController : MonoBehaviour
 
     [SerializeField] private FloatingJoystick joystick;
     [SerializeField] private float movementSpeed = 5f;
+    
+    [Header("Mining Settings")]
+    [SerializeField] private float miningDetectionRange = 1.5f; // 감지 범위
+    [SerializeField] private Vector3 miningDetectionOffset = new Vector3(0f, 0f, 0.5f); // 감지 오프셋
+    [SerializeField] private LayerMask resourceLayer;  // 바위 레이어 설정
+    
     [SerializeField] private Animator animator;
 
     private Rigidbody rb;
+    private StackManager stackManager;
+    private EquipmentManager equipmentManager;
     private Vector3 moveDirection = Vector3.zero;
     private float currentInputMagnitude = 0f;
+    private bool isMiningState = false; // 중복 호출 방지용
 
     public void SetMiningState(bool isMining)
     {
-        if (animator == null) return;
+        if (animator == null || isMiningState == isMining) return;
 
+        isMiningState = isMining;
         animator.SetBool(IsMining, isMining);
-        Debug.Log($"Mining State: {isMining}");
     }
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         rb.isKinematic = true; // 물리 연산 배제, 트랜스폼 및 트리거 전용 상태로 설정
+        stackManager = GetComponent<StackManager>();
+        equipmentManager = GetComponent<EquipmentManager>();
     }
 
     private void Update()
@@ -37,9 +48,9 @@ public sealed class PlayerController : MonoBehaviour
         HandleRotation();
         HandleMovement(); // Update에서 즉각적으로 이동 처리 (반응성 향상)
         UpdateAnimation();
+        HandleMiningDetection(); // 실시간 채굴 대상 감지
     }
 
-    // FixedUpdate는 물리 충돌 판정에만 집중하고 이동은 Update로 통합하여 반응성 극대화
     private void HandleInput()
     {
         if (joystick == null || joystick.Direction == Vector2.zero) 
@@ -71,7 +82,6 @@ public sealed class PlayerController : MonoBehaviour
         if (moveDirection == Vector3.zero) return;
 
         // 즉각적인 반응을 위해 transform.Translate 또는 position 직접 변경 사용
-        // 하이퍼캐주얼에서는 이 방식이 조이스틱 조작 시 훨씬 가볍고 빠름
         transform.position += moveDirection * (movementSpeed * Time.deltaTime);
     }
 
@@ -88,6 +98,41 @@ public sealed class PlayerController : MonoBehaviour
         if (animator != null)
         {
             animator.SetFloat(Speed, currentInputMagnitude);
+        }
+    }
+
+    private void HandleMiningDetection()
+    {
+        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
+        bool isResourceNearby = Physics.CheckSphere(detectPosition, miningDetectionRange, resourceLayer);
+
+        if (isResourceNearby)
+        {
+            if (equipmentManager != null) equipmentManager.SetWeaponVisibility(true);
+            SetMiningState(true);
+        }
+        else
+        {
+            if (equipmentManager != null) equipmentManager.SetWeaponVisibility(false);
+            SetMiningState(false);
+        }
+    }
+    
+    // 애니메이션 이벤트에서 호출될 메서드 
+    public void OnMiningHit()
+    {
+        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
+        Collider[] hitNodes = Physics.OverlapSphere(detectPosition, miningDetectionRange, resourceLayer);
+
+        foreach (var hit in hitNodes)
+        {
+            if (hit.TryGetComponent<ResourceNode>(out var node))
+            {
+                // 바위에게 데미지를 입힘
+                node.TakeDamage(1, stackManager); 
+                Debug.Log("바위 타격 성공!");
+                break; // 한 번에 하나의 바위만 캐도록 설정
+            }
         }
     }
 }

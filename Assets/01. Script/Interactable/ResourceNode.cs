@@ -34,7 +34,12 @@ public sealed class ResourceNode : MonoBehaviour
     /// </summary>
     public void TakeDamage(int damage, StackManager playerStack)
     {
-        if (isDestroyed == true || playerStack == null || playerStack.IsFull == true) return;
+        if (isDestroyed == true || playerStack == null) return;
+
+        if (playerStack.IsFull == true)
+        {
+            playerStack.ShowMaxEffect();
+        }
 
         currentHp -= damage;
 
@@ -53,8 +58,11 @@ public sealed class ResourceNode : MonoBehaviour
         nodeCollider.enabled = false;
         visualModel.SetActive(false);
 
-        // 플레이어 스택에 즉시 추가
-        playerStack.AddOre(orePrefab);
+        // 스택이 가득 차지 않았을 때만 광석을 추가합니다
+        if (playerStack.IsFull == false)
+        {
+            playerStack.AddOre(orePrefab);
+        }
 
         StartCoroutine(RespawnRoutine());
     }
