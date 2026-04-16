@@ -20,6 +20,7 @@ public sealed class Criminal : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 3f;
 
+    private Camera mainCamera;
     private int requiredHandcuffs;
     private int initialRequiredHandcuffs;
     private bool isArrested;
@@ -28,13 +29,32 @@ public sealed class Criminal : MonoBehaviour
 
     private void Start()
     {
+        mainCamera = Camera.main;
+
         // 2~4 사이의 랜덤 요구량 설정
         requiredHandcuffs = Random.Range(2, 5);
         initialRequiredHandcuffs = requiredHandcuffs;
         UpdateUI();
         
+        // 처음에는 말풍선 비활성화
+        SetBubbleActive(false);
+
         // 초기 외형 설정 (평상복 ON, 죄수복 OFF)
         ToggleMeshes(false);
+    }
+
+    public void SetBubbleActive(bool active)
+    {
+        if (bubbleUI != null) bubbleUI.SetActive(active);
+    }
+
+    private void LateUpdate()
+    {
+        // 말풍선이 활성화되어 있을 때만 카메라를 향하도록 회전 (빌보드)
+        if (bubbleUI != null && bubbleUI.activeSelf == true)
+        {
+            bubbleUI.transform.forward = mainCamera.transform.forward;
+        }
     }
 
     private void UpdateUI()
@@ -64,7 +84,7 @@ public sealed class Criminal : MonoBehaviour
     /// <summary>
     /// 대기열 내에서 지정된 위치로 이동합니다.
     /// </summary>
-    public void MoveToQueuePoint(Transform targetPoint)
+    public void MoveToQueuePoint(Transform targetPoint, System.Action onComplete = null)
     {
         if (isArrested) return;
 
@@ -74,10 +94,15 @@ public sealed class Criminal : MonoBehaviour
         animator.SetBool(IsWalking, true);
         
         transform.DOKill();
-        transform.DOLookAt(targetPoint.position, 0.2f);
+        // LookAt 대신 타겟 포인트의 회전값에 맞춤
+        transform.DORotateQuaternion(targetPoint.rotation, 0.2f);
         transform.DOMove(targetPoint.position, duration)
             .SetEase(Ease.Linear)
-            .OnComplete(() => animator.SetBool(IsWalking, false));
+            .OnComplete(() => 
+            {
+                animator.SetBool(IsWalking, false);
+                onComplete?.Invoke();
+            });
     }
 
     private void OnArrested()
@@ -88,9 +113,9 @@ public sealed class Criminal : MonoBehaviour
         if (bubbleUI != null) bubbleUI.SetActive(false);
         countText.gameObject.SetActive(false);
 
-        // 1. 보상 생성 요청
+        // 1. 보상 생성 요청 (범죄자 자신의 위치에서 스폰되도록 transform 전달)
         DeliveryDesk desk = FindFirstObjectByType<DeliveryDesk>();
-        if (desk != null) desk.SpawnCash(initialRequiredHandcuffs);
+        if (desk != null) desk.SpawnCash(initialRequiredHandcuffs, transform);
 
         // 2. 외형 교체
         ToggleMeshes(true);
@@ -117,9 +142,8 @@ public sealed class Criminal : MonoBehaviour
                 .WaitForCompletion();
         }
 
-        // 마지막 지점 도착 시 소멸
+        // 마지막 지점 도착 시 Idle 상태로 무한 대기 (Destroy 제거)
         animator.SetBool(IsWalking, false);
-        Destroy(gameObject);
     }
 
     private void ToggleMeshes(bool isPrisoner)

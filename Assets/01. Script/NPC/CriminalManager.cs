@@ -58,7 +58,28 @@ public sealed class CriminalManager : MonoBehaviour
         {
             if (i < queuePoints.Length)
             {
-                criminalQueue[i].MoveToQueuePoint(queuePoints[i]);
+                Criminal criminal = criminalQueue[i];
+                Transform targetPoint = queuePoints[i];
+
+                // 이미 해당 위치에 있는지 체크 (중복 호출 방지)
+                if (Vector3.Distance(criminal.transform.position, targetPoint.position) < 0.1f)
+                {
+                    // 0번 자리에 이미 있다면 말풍선 활성화 확인
+                    if (i == 0) criminal.SetBubbleActive(true);
+                    continue;
+                }
+
+                // 이동 시작
+                if (i == 0)
+                {
+                    // 0번 자리는 도착 시 말풍선을 켬
+                    criminal.MoveToQueuePoint(targetPoint, () => criminal.SetBubbleActive(true));
+                }
+                else
+                {
+                    // 그 외 자리는 이동만 수행
+                    criminal.MoveToQueuePoint(targetPoint);
+                }
             }
         }
     }
