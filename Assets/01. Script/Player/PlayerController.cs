@@ -13,7 +13,7 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private float movementSpeed = 5f;
     
     [Header("Mining Settings")]
-    [SerializeField] private float miningDetectionRange = 1.5f; // 감지 범위
+    [SerializeField] private Vector3 miningDetectionBoxSize = new Vector3(2f, 3f, 2f); // 감지 박스 크기
     [SerializeField] private Vector3 miningDetectionOffset = new Vector3(0f, 0f, 0.5f); // 감지 오프셋
     [SerializeField] private LayerMask resourceLayer;  // 바위 레이어 설정
     
@@ -25,6 +25,8 @@ public sealed class PlayerController : MonoBehaviour
     private Vector3 moveDirection = Vector3.zero;
     private float currentInputMagnitude = 0f;
     private bool isMiningState = false; // 중복 호출 방지용
+    
+    public bool IsInMiningZone { get; set; }
 
     public void SetMiningState(bool isMining)
     {
@@ -48,7 +50,25 @@ public sealed class PlayerController : MonoBehaviour
         HandleRotation();
         HandleMovement(); // Update에서 즉각적으로 이동 처리 (반응성 향상)
         UpdateAnimation();
-        HandleMiningDetection(); // 실시간 채굴 대상 감지
+        HandleMiningAnimation();
+    }
+
+    /// <summary>
+    /// 구역 내에서 바위 감지 및 애니메이션 제어
+    /// </summary>
+    private void HandleMiningAnimation()
+    {
+        if (IsInMiningZone == false)
+        {
+            SetMiningState(false);
+            return;
+        }
+
+        // 전방 바위 감지 (CheckBox 활용)
+        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
+        bool isResourceNearby = Physics.CheckBox(detectPosition, miningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
+        
+        SetMiningState(isResourceNearby);
     }
 
     private void HandleInput()
@@ -101,28 +121,11 @@ public sealed class PlayerController : MonoBehaviour
         }
     }
 
-    private void HandleMiningDetection()
-    {
-        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
-        bool isResourceNearby = Physics.CheckSphere(detectPosition, miningDetectionRange, resourceLayer);
-
-        if (isResourceNearby)
-        {
-            if (equipmentManager != null) equipmentManager.SetWeaponVisibility(true);
-            SetMiningState(true);
-        }
-        else
-        {
-            if (equipmentManager != null) equipmentManager.SetWeaponVisibility(false);
-            SetMiningState(false);
-        }
-    }
-    
     // 애니메이션 이벤트에서 호출될 메서드 
     public void OnMiningHit()
     {
         Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
-        Collider[] hitNodes = Physics.OverlapSphere(detectPosition, miningDetectionRange, resourceLayer);
+        Collider[] hitNodes = Physics.OverlapBox(detectPosition, miningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
 
         foreach (var hit in hitNodes)
         {
@@ -140,8 +143,12 @@ public sealed class PlayerController : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
-        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
-        Gizmos.DrawWireSphere(detectPosition, miningDetectionRange);
+        
+        // 플레이어의 위치와 회전을 기준으로 로컬 좌표계(Matrix)를 설정
+        Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+        
+        // 설정된 로컬 좌표계 내에서 Offset 위치에 지정된 크기의 큐브를 그림
+        Gizmos.DrawWireCube(miningDetectionOffset, miningDetectionBoxSize);
     }
 #endif
 }

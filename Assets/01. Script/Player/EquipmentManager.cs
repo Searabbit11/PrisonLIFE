@@ -13,10 +13,34 @@ public sealed class EquipmentManager : MonoBehaviour
     [SerializeField] private GameObject defaultPickaxePrefab;
 
     private GameObject currentEquippedWeapon;
+    private PlayerController playerController;
+
+    private void Awake()
+    {
+        playerController = GetComponent<PlayerController>();
+    }
 
     private void Start()
     {
         InitializeEquipment();
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("MiningZone"))
+        {
+            SetWeaponVisibility(true);
+            playerController.IsInMiningZone = true;
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("MiningZone"))
+        {
+            SetWeaponVisibility(false);
+            playerController.IsInMiningZone = false;
+        }
     }
 
     /// <summary>

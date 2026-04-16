@@ -42,4 +42,10 @@ https://www.fab.com/listings/2ea5672a-5813-47c9-a9e6-d68902870b8c
 3D Cartoon Cute Safe Pack (지폐)
 https://assetstore.unity.com/packages/3d/props/3d-cartoon-cute-safe-pack-297716
 
+Desk Table
+https://assetstore.unity.com/packages/3d/props/furniture/desk-table-96582
+
+Low Poly Rock Pack
+https://assetstore.unity.com/packages/3d/environments/low-poly-rock-pack-57874
+
 AINavigation
