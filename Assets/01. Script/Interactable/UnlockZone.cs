@@ -27,7 +27,7 @@ public sealed class UnlockZone : MonoBehaviour
         if (fillImage != null) fillImage.fillAmount = 0f;
         
         UpdateUI();
-        if (targetObject != null) targetObject.SetActive(false);
+        if (targetObject != null && targetObject != gameObject) targetObject.SetActive(false);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -101,7 +101,7 @@ public sealed class UnlockZone : MonoBehaviour
         if (zoneCollider != null) zoneCollider.enabled = false;
         if (costText != null) costText.gameObject.SetActive(false);
         
-        if (targetObject != null)
+        if (targetObject != null && targetObject != gameObject)
         {
             targetObject.SetActive(true);
             // 해금 시 연출 (스케일 커지며 등장)
