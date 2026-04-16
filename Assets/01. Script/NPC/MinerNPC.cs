@@ -67,7 +67,7 @@ public sealed class MinerNPC : MonoBehaviour
         for (int i = 0; i < laneNodes.Length; i++)
         {
             ResourceNode node = laneNodes[targetIndex];
-            if (node != null && node.gameObject.activeInHierarchy == true)
+            if (node != null && node.IsMineable == true)
             {
                 return node;
             }

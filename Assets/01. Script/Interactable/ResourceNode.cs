@@ -18,6 +18,7 @@ public sealed class ResourceNode : MonoBehaviour
 
     private int currentHp;
     private bool isDestroyed;
+    public bool IsMineable => isActiveAndEnabled == true && isDestroyed == false;
 
     private void Awake()
     {
