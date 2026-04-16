@@ -1,114 +1,338 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+public enum UnlockStageTargetAction
+{
+    Auto,
+    EquipWeapon,
+    ActivateSceneObject,
+    None
+}
+
+[System.Serializable]
+public struct UnlockStage
+{
+    public string stageName;
+    public GameObject targetObject;
+    public UnlockStageTargetAction targetAction;
+    public int cost;
+    public Sprite iconSprite;
+}
+
 public sealed class UnlockZone : MonoBehaviour
 {
-    [Header("Settings")]
-    [SerializeField] private int targetAmount = 20;
-    [SerializeField] private GameObject targetObject; // 해금될 대상 (예: 드릴)
+    private static readonly Dictionary<int, UnlockZone> ZoneOwnerByPlayer = new Dictionary<int, UnlockZone>();
+
+    [Header("Stages")]
+    public List<UnlockStage> stages = new List<UnlockStage>();
+    public Image iconImage;
+
+    [Header("UI")]
     [SerializeField] private TMP_Text costText;
-    [SerializeField] private Image fillImage;        // 바닥 게이지 이미지 (Filled 방식)
-    
+    [SerializeField] private Image fillImage;
+
     [Header("Animation")]
     [SerializeField] private float consumeInterval = 0.1f;
     [SerializeField] private float jumpPower = 2f;
 
+    public event Action<UnlockZone, int, UnlockStage> StageCompleted;
+    public event Action<UnlockZone> AllStagesCompleted;
+
+    private int currentStageIndex = 0;
     private int currentAmount = 0;
     private Coroutine unlockCoroutine;
     private Collider zoneCollider;
+    private int activePlayerId = -1;
+
+    private UnlockStage CurrentStage => stages[currentStageIndex];
 
     private void Awake()
     {
         zoneCollider = GetComponent<Collider>();
-        
+
+        InitializeStageObjects();
+
         if (fillImage != null) fillImage.fillAmount = 0f;
-        
         UpdateUI();
-        if (targetObject != null && targetObject != gameObject) targetObject.SetActive(false);
     }
 
     private void OnTriggerEnter(Collider other)
     {
+        if (HasCurrentStage() == false) return;
+
         if (other.CompareTag("Player") && other.TryGetComponent<StackManager>(out var playerStack))
         {
+            if (TryClaimZone(playerStack) == false) return;
+
             if (unlockCoroutine != null) StopCoroutine(unlockCoroutine);
             unlockCoroutine = StartCoroutine(UnlockRoutine(playerStack));
         }
     }
 
+    private void OnTriggerStay(Collider other)
+    {
+        if (unlockCoroutine != null || HasCurrentStage() == false) return;
+        if (other.CompareTag("Player") == false) return;
+        if (other.TryGetComponent<StackManager>(out var playerStack) == false) return;
+
+        if (TryClaimZone(playerStack) == false) return;
+        unlockCoroutine = StartCoroutine(UnlockRoutine(playerStack));
+    }
+
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") == false) return;
+
+        if (unlockCoroutine != null)
         {
-            if (unlockCoroutine != null)
+            StopCoroutine(unlockCoroutine);
+            unlockCoroutine = null;
+        }
+
+        if (other.TryGetComponent<StackManager>(out var playerStack))
+        {
+            ReleaseZoneClaim(playerStack);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (unlockCoroutine != null)
+        {
+            StopCoroutine(unlockCoroutine);
+            unlockCoroutine = null;
+        }
+
+        if (activePlayerId != -1)
+        {
+            if (ZoneOwnerByPlayer.TryGetValue(activePlayerId, out var owner) && owner == this)
             {
-                StopCoroutine(unlockCoroutine);
-                unlockCoroutine = null;
+                ZoneOwnerByPlayer.Remove(activePlayerId);
             }
+
+            activePlayerId = -1;
         }
     }
 
     private IEnumerator UnlockRoutine(StackManager playerStack)
     {
-        while (currentAmount < targetAmount)
+        EquipmentManager equipmentManager = playerStack.GetComponent<EquipmentManager>();
+
+        while (HasCurrentStage() == true && CurrentStage.cost <= 0)
         {
+            if (HasZoneClaim(playerStack) == false) yield break;
+            CompleteCurrentStage(equipmentManager);
+            yield return null;
+        }
+
+        while (HasCurrentStage() == true && currentAmount < CurrentStage.cost)
+        {
+            if (HasZoneClaim(playerStack) == false) yield break;
+
             if (playerStack.HasCash == true)
             {
                 GameObject cash = playerStack.PopCash();
                 if (cash != null)
                 {
-                    // 1. 초기화 및 부모 해제
                     cash.transform.DOKill();
                     cash.transform.SetParent(null);
 
-                    // 2. 해금 구역 중심으로 점프하며 소모 연출
                     cash.transform.DOJump(transform.position, jumpPower, 1, 0.4f)
                         .SetEase(Ease.InQuad)
                         .OnComplete(() => Destroy(cash));
 
                     currentAmount++;
-                    if (fillImage != null) fillImage.fillAmount = (float)currentAmount / targetAmount;
-                    UpdateUI();
-
-                    // CurrencyManager 연동: 보유 금액 감소
+                    UpdateProgress();
                     CurrencyManager.Instance.SpendCash(1);
 
-                    if (currentAmount >= targetAmount)
+                    if (currentAmount >= CurrentStage.cost)
                     {
-                        CompleteUnlock();
+                        CompleteCurrentStage(equipmentManager);
                         yield break;
                     }
                 }
             }
+
             yield return new WaitForSeconds(consumeInterval);
         }
     }
 
-    private void UpdateUI()
+    private void CompleteCurrentStage(EquipmentManager equipmentManager)
     {
-        if (costText != null)
+        int completedStageIndex = currentStageIndex;
+        UnlockStage completedStage = CurrentStage;
+
+        ApplyStageTarget(completedStage, equipmentManager);
+
+        currentStageIndex++;
+        unlockCoroutine = null;
+
+        if (HasCurrentStage() == true)
         {
-            int remaining = targetAmount - currentAmount;
-            costText.text = remaining.ToString();
+            currentAmount = 0;
+            if (fillImage != null) fillImage.fillAmount = 0f;
+            UpdateUI();
+
+            transform.DOKill();
+            transform.DOPunchScale(Vector3.one * 0.2f, 0.5f);
+
+            StageCompleted?.Invoke(this, completedStageIndex, completedStage);
+            Debug.Log($"Unlock Stage Completed: {completedStage.stageName}");
+            return;
+        }
+
+        ShowMaxState();
+        if (activePlayerId != -1)
+        {
+            ReleaseZoneClaimById(activePlayerId);
+        }
+
+        StageCompleted?.Invoke(this, completedStageIndex, completedStage);
+        AllStagesCompleted?.Invoke(this);
+        Debug.Log("All Unlock Stages Completed!");
+    }
+
+    private void ApplyStageTarget(UnlockStage stage, EquipmentManager equipmentManager)
+    {
+        if (stage.targetObject == null || stage.targetAction == UnlockStageTargetAction.None) return;
+
+        UnlockStageTargetAction resolvedAction = ResolveTargetAction(stage);
+        if (resolvedAction == UnlockStageTargetAction.EquipWeapon)
+        {
+            if (equipmentManager != null)
+            {
+                equipmentManager.EquipWeapon(stage.targetObject);
+            }
+
+            return;
+        }
+
+        if (resolvedAction == UnlockStageTargetAction.ActivateSceneObject && IsSceneObject(stage.targetObject) == true && stage.targetObject != gameObject)
+        {
+            stage.targetObject.SetActive(true);
+            stage.targetObject.transform.DOKill();
+            stage.targetObject.transform.DOPunchScale(Vector3.one * 0.2f, 0.5f);
         }
     }
 
-    private void CompleteUnlock()
+    private UnlockStageTargetAction ResolveTargetAction(UnlockStage stage)
     {
-        if (zoneCollider != null) zoneCollider.enabled = false;
-        if (costText != null) costText.gameObject.SetActive(false);
-        
-        if (targetObject != null && targetObject != gameObject)
+        if (stage.targetAction != UnlockStageTargetAction.Auto) return stage.targetAction;
+
+        return IsSceneObject(stage.targetObject) == true
+            ? UnlockStageTargetAction.ActivateSceneObject
+            : UnlockStageTargetAction.EquipWeapon;
+    }
+
+    private void UpdateProgress()
+    {
+        if (fillImage != null)
         {
-            targetObject.SetActive(true);
-            // 해금 시 연출 (스케일 커지며 등장)
-            targetObject.transform.localScale = Vector3.zero;
-            targetObject.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+            fillImage.fillAmount = CurrentStage.cost > 0 ? (float)currentAmount / CurrentStage.cost : 1f;
         }
 
-        Debug.Log("Unlock Completed!");
+        UpdateUI();
+    }
+
+    private void UpdateUI()
+    {
+        if (HasCurrentStage() == false)
+        {
+            if (costText != null) costText.text = "MAX";
+            if (fillImage != null) fillImage.fillAmount = 1f;
+            if (iconImage != null) iconImage.enabled = false;
+            return;
+        }
+
+        if (costText != null)
+        {
+            int remaining = Mathf.Max(CurrentStage.cost - currentAmount, 0);
+            costText.text = remaining.ToString();
+        }
+
+        if (iconImage != null)
+        {
+            iconImage.sprite = CurrentStage.iconSprite;
+            iconImage.enabled = CurrentStage.iconSprite != null;
+        }
+    }
+
+    private void ShowMaxState()
+    {
+        if (zoneCollider != null) zoneCollider.enabled = false;
+        if (fillImage != null) fillImage.fillAmount = 1f;
+        if (costText != null) costText.text = "MAX";
+        if (iconImage != null) iconImage.enabled = false;
+
+        transform.DOKill();
+        transform.DOPunchScale(Vector3.one * 0.2f, 0.5f);
+    }
+
+    private void InitializeStageObjects()
+    {
+        if (stages == null || stages.Count == 0)
+        {
+            Debug.LogWarning("[UnlockZone] Stages list is empty. This zone will not unlock anything.", this);
+            return;
+        }
+
+        for (int i = 0; i < stages.Count; i++)
+        {
+            GameObject stageObject = stages[i].targetObject;
+            if (IsSceneObject(stageObject) == false || stageObject == gameObject) continue;
+            stageObject.SetActive(false);
+        }
+    }
+
+    private bool HasCurrentStage()
+    {
+        return stages != null && currentStageIndex >= 0 && currentStageIndex < stages.Count;
+    }
+
+    private static bool IsSceneObject(GameObject target)
+    {
+        return target != null && target.scene.IsValid();
+    }
+
+    private bool TryClaimZone(StackManager playerStack)
+    {
+        int playerId = playerStack.GetInstanceID();
+        if (ZoneOwnerByPlayer.TryGetValue(playerId, out var owner) && owner != this)
+        {
+            return false;
+        }
+
+        ZoneOwnerByPlayer[playerId] = this;
+        activePlayerId = playerId;
+        return true;
+    }
+
+    private bool HasZoneClaim(StackManager playerStack)
+    {
+        int playerId = playerStack.GetInstanceID();
+        return ZoneOwnerByPlayer.TryGetValue(playerId, out var owner) && owner == this;
+    }
+
+    private void ReleaseZoneClaim(StackManager playerStack)
+    {
+        ReleaseZoneClaimById(playerStack.GetInstanceID());
+    }
+
+    private void ReleaseZoneClaimById(int playerId)
+    {
+        if (ZoneOwnerByPlayer.TryGetValue(playerId, out var owner) && owner == this)
+        {
+            ZoneOwnerByPlayer.Remove(playerId);
+        }
+
+        if (activePlayerId == playerId)
+        {
+            activePlayerId = -1;
+        }
     }
 }

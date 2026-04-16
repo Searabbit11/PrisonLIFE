@@ -4,10 +4,6 @@ using UnityEngine;
 
 public sealed class ResourceNode : MonoBehaviour
 {
-    private const float JumpPower = 1.5f;
-    private const float JumpDuration = 0.5f;
-    private const int JumpCount = 1;
-
     [Header("Health Settings")]
     [SerializeField] private int maxHp = 3;
     [SerializeField] private float respawnTime = 5f;
@@ -29,9 +25,6 @@ public sealed class ResourceNode : MonoBehaviour
         if (nodeCollider == null) nodeCollider = GetComponent<Collider>();
     }
 
-    /// <summary>
-    /// 플레이어의 채굴 애니메이션 타이밍에 맞춰 호출될 데미지 메서드
-    /// </summary>
     public void TakeDamage(int damage, StackManager playerStack)
     {
         if (isDestroyed == true || playerStack == null) return;
@@ -41,24 +34,42 @@ public sealed class ResourceNode : MonoBehaviour
             playerStack.ShowMaxEffect();
         }
 
-        currentHp -= damage;
-
-        // 바위 타격 시 살짝 흔들리는 연출
-        visualModel.transform.DOPunchScale(Vector3.one * 0.1f, 0.2f);
+        ApplyDamage(damage);
 
         if (currentHp <= 0)
         {
-            Die(playerStack);
+            DieForPlayer(playerStack);
         }
     }
 
-    private void Die(StackManager playerStack)
+    public GameObject TakeDamageFromNpc(int damage)
     {
-        isDestroyed = true;
-        nodeCollider.enabled = false;
-        visualModel.SetActive(false);
+        if (isDestroyed == true) return null;
 
-        // 스택이 가득 차지 않았을 때만 광석을 추가합니다
+        ApplyDamage(damage);
+
+        if (currentHp <= 0)
+        {
+            return DieForNpc();
+        }
+
+        return null;
+    }
+
+    private void ApplyDamage(int damage)
+    {
+        currentHp -= damage;
+
+        if (visualModel != null)
+        {
+            visualModel.transform.DOPunchScale(Vector3.one * 0.1f, 0.2f);
+        }
+    }
+
+    private void DieForPlayer(StackManager playerStack)
+    {
+        SetDestroyedVisualState();
+
         if (playerStack.IsFull == false)
         {
             playerStack.AddOre(orePrefab);
@@ -67,10 +78,31 @@ public sealed class ResourceNode : MonoBehaviour
         StartCoroutine(RespawnRoutine());
     }
 
+    private GameObject DieForNpc()
+    {
+        SetDestroyedVisualState();
+
+        GameObject droppedOre = null;
+        if (orePrefab != null)
+        {
+            Vector3 dropPosition = spawnPoint != null ? spawnPoint.position : transform.position;
+            droppedOre = Instantiate(orePrefab, dropPosition, Quaternion.identity);
+        }
+
+        StartCoroutine(RespawnRoutine());
+        return droppedOre;
+    }
+
+    private void SetDestroyedVisualState()
+    {
+        isDestroyed = true;
+        if (nodeCollider != null) nodeCollider.enabled = false;
+        if (visualModel != null) visualModel.SetActive(false);
+    }
+
     private IEnumerator RespawnRoutine()
     {
         yield return new WaitForSeconds(respawnTime);
-
         ResetNode();
     }
 
@@ -78,10 +110,11 @@ public sealed class ResourceNode : MonoBehaviour
     {
         currentHp = maxHp;
         isDestroyed = false;
-        nodeCollider.enabled = true;
+
+        if (nodeCollider != null) nodeCollider.enabled = true;
+        if (visualModel == null) return;
+
         visualModel.SetActive(true);
-        
-        // 재생성 시 스케일 연출
         visualModel.transform.localScale = Vector3.zero;
         visualModel.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
     }

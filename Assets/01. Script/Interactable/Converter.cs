@@ -68,6 +68,12 @@ public sealed class Converter : MonoBehaviour
         }
     }
 
+    public void ReceiveNpcOre(GameObject ore)
+    {
+        if (ore == null) return;
+        ReceiveOreToFloor(ore);
+    }
+
     /// <summary>
     /// 출구 구역(Output Zone)에서 플레이어에게 수갑을 전달합니다.
     /// </summary>
@@ -100,6 +106,13 @@ public sealed class Converter : MonoBehaviour
     {
         // 연출 중 물리 충돌 방지
         if (ore.TryGetComponent<Collider>(out var col)) col.enabled = false;
+        if (ore.TryGetComponent<Rigidbody>(out var rb))
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
 
         int index = rawOresOnFloor.Count;
         rawOresOnFloor.Add(ore);

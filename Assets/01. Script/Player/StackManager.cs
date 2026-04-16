@@ -28,9 +28,12 @@ public sealed class StackManager : MonoBehaviour
     private bool isMaxEffectPlaying;
 
     public bool IsFull => stackedItems.Count >= MaxStackCount;
+    public int MaxCarryCount => MaxStackCount;
+    public int OreCount => stackedItems.Count;
     public bool HasHandcuffs => handcuffItems.Count > 0;
     public int HandcuffCount => handcuffItems.Count;
     public bool HasCash => cashStack.Count > 0;
+    public int CashCount => cashStack.Count;
 
     private void Start()
     {
