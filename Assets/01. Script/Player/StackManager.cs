@@ -17,6 +17,11 @@ public sealed class StackManager : MonoBehaviour
     [SerializeField] private float handcuffYOffset = 0.1f;
     private readonly List<GameObject> handcuffItems = new List<GameObject>();
 
+    [Header("Cash Stack Settings")]
+    [SerializeField] private Transform cashStackPivot;
+    [SerializeField] private float cashYOffset = 0.05f;
+    private readonly List<GameObject> cashStack = new List<GameObject>();
+
     [Header("UI Settings")]
     [SerializeField] private TMP_Text maxTextLabel;
 
@@ -25,6 +30,7 @@ public sealed class StackManager : MonoBehaviour
     public bool IsFull => stackedItems.Count >= MaxStackCount;
     public bool HasHandcuffs => handcuffItems.Count > 0;
     public int HandcuffCount => handcuffItems.Count;
+    public bool HasCash => cashStack.Count > 0;
 
     private void Start()
     {
@@ -153,6 +159,39 @@ public sealed class StackManager : MonoBehaviour
     {
         // X, Z축 오프셋을 제거하고 오직 Y축 스택 위치(로컬 좌표)만 반환
         return new Vector3(0f, (handcuffItems.Count) * handcuffYOffset, 0f);
+    }
+    #endregion
+
+    #region Cash Stack Logic (등 뒤)
+    public void PushCash(GameObject cash)
+    {
+        // 1. 기존 트윈 종료 및 물리 충돌 방지
+        cash.transform.DOKill();
+        if (cash.TryGetComponent<Collider>(out var col)) col.enabled = false;
+
+        // 2. 부모 설정 및 리스트 추가
+        cash.transform.SetParent(cashStackPivot);
+        cashStack.Add(cash);
+
+        // 3. 로컬 목표 위치 계산 (Y축 적재)
+        Vector3 targetLocalPos = new Vector3(0, (cashStack.Count - 1) * cashYOffset, 0);
+
+        // 4. 점프 연출로 등 뒤 피벗에 안착
+        cash.transform.DOLocalJump(targetLocalPos, 1.5f, 1, 0.4f).SetEase(Ease.OutQuad);
+        cash.transform.DOLocalRotate(Vector3.zero, 0.4f);
+
+        // CurrencyManager 연동: 보유 금액 증가
+        CurrencyManager.Instance.AddCash(1);
+    }
+
+    public GameObject PopCash()
+    {
+        if (cashStack.Count == 0) return null;
+
+        GameObject lastCash = cashStack[^1];
+        cashStack.RemoveAt(cashStack.Count - 1);
+        lastCash.transform.SetParent(null);
+        return lastCash;
     }
     #endregion
 }

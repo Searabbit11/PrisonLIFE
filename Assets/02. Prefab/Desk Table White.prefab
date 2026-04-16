@@ -249,7 +249,7 @@ Transform:
   m_GameObject: {fileID: 3211625208775462980}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.46, y: 0.1, z: -0.035}
+  m_LocalPosition: {x: 2.294, y: -0.016, z: -0.285}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -312,7 +312,9 @@ MonoBehaviour:
   cashPrefab: {fileID: 482207917251993812, guid: 5eec5faeafc33094bbccecc81d16dc55,
     type: 3}
   cashJumpPower: 2
-  cashSpreadRange: 1.5
+  cashWidthOffset: 0.4
+  cashDepthOffset: 0.2
+  cashHeightOffset: 0.05
   jumpPower: 1.5
   jumpDuration: 0.4
 --- !u!65 &5914354164036112622
