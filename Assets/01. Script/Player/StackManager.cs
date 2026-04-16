@@ -6,18 +6,25 @@ using UnityEngine;
 public sealed class StackManager : MonoBehaviour
 {
     private const int MaxStackCount = 10;
-    [Header("Stack Settings")]
+    [Header("Ore Stack Settings")]
     [SerializeField] private float yOffset = 0.18f;
+    [SerializeField] private Transform stackPivot;
     private const float FollowSpeed = 15f;
+    private readonly List<Transform> stackedItems = new List<Transform>();
+
+    [Header("Handcuff Stack Settings")]
+    [SerializeField] private Transform handcuffStackPivot;
+    [SerializeField] private float handcuffYOffset = 0.1f;
+    private readonly List<GameObject> handcuffItems = new List<GameObject>();
 
     [Header("UI Settings")]
     [SerializeField] private TMP_Text maxTextLabel;
 
-    [SerializeField] private Transform stackPivot;
-    private readonly List<Transform> stackedItems = new List<Transform>();
     private bool isMaxEffectPlaying;
 
     public bool IsFull => stackedItems.Count >= MaxStackCount;
+    public bool HasHandcuffs => handcuffItems.Count > 0;
+    public int HandcuffCount => handcuffItems.Count;
 
     private void Start()
     {
@@ -121,4 +128,31 @@ public sealed class StackManager : MonoBehaviour
         lastItem.SetParent(null);
         return lastItem.gameObject;
     }
+
+    #region Handcuff Stack Logic (가슴 앞)
+    public void PushHandcuff(GameObject handcuff)
+    {
+        // 부모 설정을 최우선으로 수행하여 로컬 좌표계 기준점을 잡습니다.
+        handcuff.transform.SetParent(handcuffStackPivot);
+        
+        // 리스트에 추가
+        handcuffItems.Add(handcuff);
+    }
+
+    public GameObject PopHandcuff()
+    {
+        if (handcuffItems.Count == 0) return null;
+
+        GameObject last = handcuffItems[^1];
+        handcuffItems.RemoveAt(handcuffItems.Count - 1);
+        last.transform.SetParent(null);
+        return last;
+    }
+
+    public Vector3 GetNextHandcuffPosition()
+    {
+        // X, Z축 오프셋을 제거하고 오직 Y축 스택 위치(로컬 좌표)만 반환
+        return new Vector3(0f, (handcuffItems.Count) * handcuffYOffset, 0f);
+    }
+    #endregion
 }

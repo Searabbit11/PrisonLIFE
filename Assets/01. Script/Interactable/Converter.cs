@@ -40,7 +40,9 @@ public sealed class Converter : MonoBehaviour
 
     [Header("Output Stacking")]
     [SerializeField] private float stackYOffset = 0.15f;
-    private int outputCount = 0; // 쌓인 수갑의 개수
+    [SerializeField] private float collectInterval = 0.1f;
+    private readonly List<GameObject> producedHandcuffs = new List<GameObject>(); // 생산된 수갑 관리 리스트
+    private float nextCollectTime;
 
     private float nextReceiveTime;
     private float nextProcessTime;
@@ -50,21 +52,49 @@ public sealed class Converter : MonoBehaviour
         ProcessRawOresAutomatically();
     }
 
-    private void OnTriggerStay(Collider other)
+    /// <summary>
+    /// 입구 구역(Input Zone)에서 플레이어의 광석을 수거합니다.
+    /// </summary>
+    public void ProcessOreInput(GameObject player)
     {
-        // 플레이어로부터 광석 수거 (빠른 간격)
         if (Time.time < nextReceiveTime) return;
+        if (player.TryGetComponent<StackManager>(out var playerStack) == false) return;
 
-        if (other.TryGetComponent<StackManager>(out var stackManager))
+        GameObject ore = playerStack.PopItem();
+        if (ore != null)
         {
-            GameObject ore = stackManager.PopItem();
-            if (ore != null)
-            {
-                nextReceiveTime = Time.time + receiveCooldown;
-                ReceiveOreToFloor(ore);
-            }
+            nextReceiveTime = Time.time + receiveCooldown;
+            ReceiveOreToFloor(ore);
         }
     }
+
+    /// <summary>
+    /// 출구 구역(Output Zone)에서 플레이어에게 수갑을 전달합니다.
+    /// </summary>
+    public void ProcessHandcuffOutput(GameObject player)
+    {
+        if (Time.time < nextCollectTime || producedHandcuffs.Count == 0) return;
+        if (player.TryGetComponent<StackManager>(out var playerStack) == false) return;
+
+        nextCollectTime = Time.time + collectInterval;
+
+        // LIFO: 가장 나중에 쌓인 수갑부터 수거
+        int lastIndex = producedHandcuffs.Count - 1;
+        GameObject handcuff = producedHandcuffs[lastIndex];
+        producedHandcuffs.RemoveAt(lastIndex);
+
+        // 1. 안착할 '로컬' 목표 위치를 먼저 가져옵니다.
+        Vector3 localTargetPos = playerStack.GetNextHandcuffPosition();
+
+        // 2. 점프 시작 전 부모를 플레이어 피벗으로 변경합니다.
+        playerStack.PushHandcuff(handcuff);
+
+        // 3. 부모가 바뀌었으므로 'DOLocalJump'를 사용하여 정확한 로컬 좌표로 날아갑니다.
+        handcuff.transform.DOLocalJump(localTargetPos, jumpPower, 1, jumpDuration).SetEase(Ease.OutQuad);
+        // 회전 역시 피벗의 정면을 바라보도록 로컬 0으로 맞춥니다.
+        handcuff.transform.DOLocalRotate(Vector3.zero, jumpDuration);
+    }
+
 
     private void ReceiveOreToFloor(GameObject ore)
     {
@@ -192,13 +222,14 @@ public sealed class Converter : MonoBehaviour
         // 적재: beltEndPoint 도착 후 stackPoint로 점프하며 1열 적재
         seq.AppendCallback(() =>
         {
-            Vector3 targetOffset = new Vector3(0f, outputCount * stackYOffset, 0f);
+            Vector3 targetOffset = new Vector3(0f, producedHandcuffs.Count * stackYOffset, 0f);
             Vector3 finalTargetPos = outputStackPoint.position + (outputStackPoint.rotation * targetOffset);
 
             handcuff.transform.DOJump(finalTargetPos, jumpPower, 1, jumpDuration).SetEase(Ease.OutQuad);
             handcuff.transform.DORotateQuaternion(outputStackPoint.rotation, jumpDuration);
             
-            outputCount++;
+            // 리스트에 추가하여 추후 플레이어가 수거 가능하게 함
+            producedHandcuffs.Add(handcuff);
         });
     }
 }
