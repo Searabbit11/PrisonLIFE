@@ -11,14 +11,22 @@ public sealed class CriminalManager : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private int maxQueueSize = 2;
     [SerializeField] private float spawnCheckInterval = 2f;
-[Header("Waypoints")]
-[SerializeField] private Transform[] queuePoints;    // 대기열 위치 (2개)
-[SerializeField] public Transform[] prisonPathPoints; // 감옥으로 가는 경로
-[SerializeField] private Transform[] prisonSlots;     // 감옥 내 개별 자리 (정렬용)
+
+    [Header("Waypoints")]
+    [SerializeField] private Transform[] queuePoints;    // 대기열 위치 (2개)
+    [SerializeField] public Transform[] prisonPathPoints; // 감옥으로 가는 경로
+
+    [Header("Prison Settings")]
+    [SerializeField] private Transform[] prisonSlots;     // 감옥 내 개별 자리 (정렬용)
+    [SerializeField] private Transform prisonFocusPoint;  // 카메라가 주시할 특정 지점
+    [SerializeField] private TMPro.TMP_Text capacityText; // "0/20" 표시용 UI
+    [SerializeField] private int maxCapacity = 20;        // 최대 수용 인원
 
 private List<Criminal> criminalQueue = new List<Criminal>();
-private Dictionary<Transform, bool> slotOccupancy = new Dictionary<Transform, bool>(); // 슬롯 점유 상태
+private Dictionary<Transform, bool> slotOccupancy = new Dictionary<Transform, bool>();
+private int currentPrisonerCount = 0;
 private float nextSpawnCheckTime;
+private bool hasNotifiedFull = false;
 
 private void Awake()
 {
@@ -26,6 +34,7 @@ private void Awake()
     else Destroy(gameObject);
 
     InitializePrisonSlots();
+    UpdateCapacityUI();
 }
 
 private void InitializePrisonSlots()
@@ -38,7 +47,7 @@ private void InitializePrisonSlots()
 }
 
 /// <summary>
-/// 감옥 내 빈 자리를 찾아 반환합니다.
+/// 감옥 내 빈 자리를 찾아 예약합니다. (시각적 카운트는 올리지 않음)
 /// </summary>
 public Transform GetAvailablePrisonSlot()
 {
@@ -46,11 +55,67 @@ public Transform GetAvailablePrisonSlot()
     {
         if (slot != null && slotOccupancy[slot] == false)
         {
-            slotOccupancy[slot] = true; // 점유 처리
+            slotOccupancy[slot] = true; // 자리 예약만 수행
             return slot;
         }
     }
     return null;
+}
+
+/// <summary>
+/// 죄수가 실제로 감옥 자리에 도착했을 때 호출하여 UI 카운트를 올립니다.
+/// </summary>
+public void AddPrisonerVisualCount()
+{
+    currentPrisonerCount++;
+    UpdateCapacityUI();
+}
+
+public void UpdateCapacityUI()
+{
+    if (capacityText != null)
+    {
+        capacityText.text = $"{currentPrisonerCount}/{maxCapacity}";
+    }
+}
+
+/// <summary>
+/// 업그레이드 시 최대 수용량을 늘리는 함수
+/// </summary>
+public void UpgradeCapacity(int newMax, Transform[] newSlots)
+{
+    maxCapacity = newMax;
+    hasNotifiedFull = false;
+
+    // 새로운 슬롯 추가
+    if (newSlots != null)
+    {
+        foreach (var slot in newSlots)
+        {
+            if (slot != null && slotOccupancy.ContainsKey(slot) == false)
+            {
+                slotOccupancy[slot] = false;
+            }
+        }
+    }
+
+    UpdateCapacityUI();
+}
+
+/// <summary>
+/// 정원 초과 시 카메라 연출을 실행합니다.
+/// </summary>
+public void NotifyQueueFull(Vector3 queuePosition)
+{
+    if (hasNotifiedFull == true) return;
+    hasNotifiedFull = true;
+
+    // 우선적으로 직접 지정한 지점을 사용하고, 없으면 슬롯들의 중간 지점 사용
+    Vector3 focusPos = prisonFocusPoint != null 
+        ? prisonFocusPoint.position 
+        : (prisonSlots != null && prisonSlots.Length > 0 ? prisonSlots[prisonSlots.Length / 2].position : queuePosition);
+
+    CameraController.Instance.FocusTarget(focusPos, 1.2f, 1.5f);
 }
 
 private void Update()

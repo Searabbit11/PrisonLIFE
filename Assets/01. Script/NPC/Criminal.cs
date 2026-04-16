@@ -46,10 +46,13 @@ public sealed class Criminal : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (bubbleUI != null && bubbleUI.activeSelf && mainCamera != null)
+        // 체포되었거나 말풍선이 꺼져있으면 연산 중단 (성능 최적화)
+        if (isArrested == true || bubbleUI == null || bubbleUI.activeSelf == false || mainCamera == null)
         {
-            bubbleUI.transform.forward = mainCamera.transform.forward;
+            return;
         }
+
+        bubbleUI.transform.forward = mainCamera.transform.forward;
     }
 
     private void UpdateUI()
@@ -137,6 +140,23 @@ public sealed class Criminal : MonoBehaviour
         
         animator.SetBool(IsWalking, true);
 
+        // 슬롯이 없으면 첫 번째 포인트까지만 가고 대기
+        if (targetSlot == null)
+        {
+            if (path.Length > 0)
+            {
+                float distance = Vector3.Distance(transform.position, path[0].position);
+                float duration = distance / moveSpeed;
+                transform.DOLookAt(path[0].position, 0.2f);
+                yield return transform.DOMove(path[0].position, duration).SetEase(Ease.Linear).WaitForCompletion();
+                
+                // [연출 추가] 죄수가 입구에 도착했을 때 카메라가 감옥을 비춤
+                CriminalManager.Instance.NotifyQueueFull(path[0].position);
+            }
+            animator.SetBool(IsWalking, false);
+            yield break;
+        }
+
         // 1. 공통 경로를 따라 이동
         foreach (var waypoint in path)
         {
@@ -150,19 +170,20 @@ public sealed class Criminal : MonoBehaviour
         }
 
         // 2. 할당받은 개별 슬롯으로 이동
-        if (targetSlot != null)
-        {
-            float distance = Vector3.Distance(transform.position, targetSlot.position);
-            float duration = distance / moveSpeed;
+        float slotDistance = Vector3.Distance(transform.position, targetSlot.position);
+        float slotDuration = slotDistance / moveSpeed;
 
-            transform.DOLookAt(targetSlot.position, 0.2f);
-            yield return transform.DOMove(targetSlot.position, duration)
-                .SetEase(Ease.Linear)
-                .WaitForCompletion();
+        transform.DOLookAt(targetSlot.position, 0.2f);
+        yield return transform.DOMove(targetSlot.position, slotDuration)
+            .SetEase(Ease.Linear)
+            .WaitForCompletion();
 
-            // 3. 도착 후 정렬 (슬롯의 방향을 바라보게 함)
-            transform.DORotateQuaternion(targetSlot.rotation, 0.5f);
-        }
+        // 3. 도착 후 반대 방향으로 정렬 (180도 회전 추가)
+        Quaternion targetRotation = targetSlot.rotation * Quaternion.Euler(0, 180, 0);
+        yield return transform.DORotateQuaternion(targetRotation, 0.5f).WaitForCompletion();
+
+        // [추가] 실제로 자리에 도착하여 정렬이 끝난 순간 카운트 증가
+        CriminalManager.Instance.AddPrisonerVisualCount();
 
         animator.SetBool(IsWalking, false);
     }

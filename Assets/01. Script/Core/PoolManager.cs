@@ -21,6 +21,9 @@ public sealed class PoolManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
+        // DOTween 용량 설정 (트윈 500개, 시퀀스 100개로 확장)
+        DG.Tweening.DOTween.SetTweensCapacity(500, 100);
+
         InitializePools();
     }
 
