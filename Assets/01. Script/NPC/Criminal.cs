@@ -133,8 +133,11 @@ public sealed class Criminal : MonoBehaviour
     private IEnumerator MoveAlongPathRoutine()
     {
         Transform[] path = CriminalManager.Instance.prisonPathPoints;
+        Transform targetSlot = CriminalManager.Instance.GetAvailablePrisonSlot(); // 빈 슬롯 할당받기
+        
         animator.SetBool(IsWalking, true);
 
+        // 1. 공통 경로를 따라 이동
         foreach (var waypoint in path)
         {
             float distance = Vector3.Distance(transform.position, waypoint.position);
@@ -144,6 +147,21 @@ public sealed class Criminal : MonoBehaviour
             yield return transform.DOMove(waypoint.position, duration)
                 .SetEase(Ease.Linear)
                 .WaitForCompletion();
+        }
+
+        // 2. 할당받은 개별 슬롯으로 이동
+        if (targetSlot != null)
+        {
+            float distance = Vector3.Distance(transform.position, targetSlot.position);
+            float duration = distance / moveSpeed;
+
+            transform.DOLookAt(targetSlot.position, 0.2f);
+            yield return transform.DOMove(targetSlot.position, duration)
+                .SetEase(Ease.Linear)
+                .WaitForCompletion();
+
+            // 3. 도착 후 정렬 (슬롯의 방향을 바라보게 함)
+            transform.DORotateQuaternion(targetSlot.rotation, 0.5f);
         }
 
         animator.SetBool(IsWalking, false);

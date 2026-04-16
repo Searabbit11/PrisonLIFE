@@ -285,6 +285,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 101904015}
   m_CullTransparentMesh: 1
+--- !u!1 &109804100
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 109804101}
+  m_Layer: 0
+  m_Name: =========================
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &109804101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109804100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.8973937, y: -7.7444797, z: 0.7422614}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &128282109 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2648880307225557099, guid: caa4f0d5dab50c14687cb6074dd53a56,
@@ -3578,6 +3609,7 @@ MonoBehaviour:
   prisonPathPoints:
   - {fileID: 1686999055}
   - {fileID: 1332343156}
+  prisonSlots: []
 --- !u!4 &1611190223
 Transform:
   m_ObjectHideFlags: 0
@@ -3846,6 +3878,66 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1611190223}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1706650506
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1706650508}
+  - component: {fileID: 1706650507}
+  m_Layer: 0
+  m_Name: PoolManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1706650507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706650506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80024fd435ffcaf4ca3f9cbc8b50094a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pools:
+  - tag: Ore
+    prefab: {fileID: 6810297198833406055, guid: 211c3a43c2e9e4641b7f698df8b3b590,
+      type: 3}
+    size: 50
+  - tag: Ingot
+    prefab: {fileID: 4464911115753640881, guid: 425378c8034977c4c8018454b0f51f9d,
+      type: 3}
+    size: 10
+  - tag: Handcuff
+    prefab: {fileID: 8245478869410281495, guid: b497d75acc62174499305195c54a15be,
+      type: 3}
+    size: 40
+  - tag: Cash
+    prefab: {fileID: 482207917251993812, guid: 5eec5faeafc33094bbccecc81d16dc55, type: 3}
+    size: 150
+--- !u!4 &1706650508
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706650506}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -4.8973937, y: -7.7444797, z: 0.7422614}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1716874227
 GameObject:
@@ -7746,8 +7838,10 @@ SceneRoots:
   - {fileID: 1128937341}
   - {fileID: 402140618}
   - {fileID: 633683712}
+  - {fileID: 1706650508}
   - {fileID: 612353667}
   - {fileID: 1611190223}
+  - {fileID: 109804101}
   - {fileID: 669392739}
   - {fileID: 147286430}
   - {fileID: 1255513267}

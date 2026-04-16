@@ -11,21 +11,49 @@ public sealed class CriminalManager : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private int maxQueueSize = 2;
     [SerializeField] private float spawnCheckInterval = 2f;
+[Header("Waypoints")]
+[SerializeField] private Transform[] queuePoints;    // 대기열 위치 (2개)
+[SerializeField] public Transform[] prisonPathPoints; // 감옥으로 가는 경로
+[SerializeField] private Transform[] prisonSlots;     // 감옥 내 개별 자리 (정렬용)
 
-    [Header("Waypoints")]
-    [SerializeField] private Transform[] queuePoints;    // 대기열 위치 (2개)
-    [SerializeField] public Transform[] prisonPathPoints; // 감옥으로 가는 경로
+private List<Criminal> criminalQueue = new List<Criminal>();
+private Dictionary<Transform, bool> slotOccupancy = new Dictionary<Transform, bool>(); // 슬롯 점유 상태
+private float nextSpawnCheckTime;
 
-    private List<Criminal> criminalQueue = new List<Criminal>();
-    private float nextSpawnCheckTime;
+private void Awake()
+{
+    if (Instance == null) Instance = this;
+    else Destroy(gameObject);
 
-    private void Awake()
+    InitializePrisonSlots();
+}
+
+private void InitializePrisonSlots()
+{
+    if (prisonSlots == null) return;
+    foreach (var slot in prisonSlots)
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (slot != null) slotOccupancy[slot] = false;
     }
+}
 
-    private void Update()
+/// <summary>
+/// 감옥 내 빈 자리를 찾아 반환합니다.
+/// </summary>
+public Transform GetAvailablePrisonSlot()
+{
+    foreach (var slot in prisonSlots)
+    {
+        if (slot != null && slotOccupancy[slot] == false)
+        {
+            slotOccupancy[slot] = true; // 점유 처리
+            return slot;
+        }
+    }
+    return null;
+}
+
+private void Update()
     {
         // 큐에 빈자리가 있고 스폰 쿨타임이 지났으면 생성
         if (criminalQueue.Count < maxQueueSize && Time.time >= nextSpawnCheckTime)

@@ -116,8 +116,8 @@ public sealed class DeliveryDesk : MonoBehaviour
                 .SetEase(Ease.InQuad)
                 .OnComplete(() =>
                 {
-                    // 전달 완료 시 수갑 파괴 및 범죄자 요구량 감소
-                    Destroy(handcuff);
+                    // 전달 완료 시 수갑 풀로 반환 및 범죄자 요구량 감소
+                    PoolManager.Instance.ReturnToPool("Handcuff", handcuff);
                     targetCriminal.ReceiveHandcuff();
                 });
         }
@@ -130,14 +130,15 @@ public sealed class DeliveryDesk : MonoBehaviour
     /// <param name="spawnOrigin">지폐가 생겨날 시작 위치 (범죄자 위치)</param>
     public void SpawnCash(int initialRequiredAmount, Transform spawnOrigin)
     {
-        if (cashPrefab == null || cashSpawnPoint == null || spawnOrigin == null) return;
+        if (cashSpawnPoint == null || spawnOrigin == null) return;
 
         int amountToSpawn = initialRequiredAmount * 2;
 
         for (int i = 0; i < amountToSpawn; i++)
         {
-            // 지폐를 범죄자의 위치에서 생성
-            GameObject cash = Instantiate(cashPrefab, spawnOrigin.position, Quaternion.identity);
+            // 지폐를 풀에서 가져옴 (범죄자 위치에서 생성)
+            GameObject cash = PoolManager.Instance.SpawnFromPool("Cash", spawnOrigin.position, Quaternion.identity);
+            if (cash == null) continue;
             
             // 누적 개수(totalSpawnedCashCount)를 사용하여 레이어와 그리드 인덱스 계산
             int layer = totalSpawnedCashCount / 6;

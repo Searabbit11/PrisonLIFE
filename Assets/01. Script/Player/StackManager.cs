@@ -54,10 +54,11 @@ public sealed class StackManager : MonoBehaviour
             return;
         }
 
-        // 광석 생성 및 초기 설정
-        GameObject ore = Instantiate(orePrefab);
+        // PoolManager에서 광석을 가져옵니다.
+        GameObject ore = PoolManager.Instance.SpawnFromPool("Ore", stackPivot.position, Quaternion.identity);
+        if (ore == null) return;
+
         Transform oreTransform = ore.transform;
-        
         // 생성된 광석의 부모를 플레이어의 스택 피벗으로 설정합니다.
         oreTransform.SetParent(stackPivot);
         

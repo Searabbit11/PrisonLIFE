@@ -18,11 +18,14 @@ public sealed class ResourceNode : MonoBehaviour
 
     private int currentHp;
     private bool isDestroyed;
+    private WaitForSeconds respawnWait; // 캐싱용 변수 추가
+
     public bool IsMineable => isActiveAndEnabled == true && isDestroyed == false;
 
     private void Awake()
     {
         currentHp = maxHp;
+        respawnWait = new WaitForSeconds(respawnTime); // 미리 생성하여 재사용
         if (nodeCollider == null) nodeCollider = GetComponent<Collider>();
     }
 
@@ -87,7 +90,7 @@ public sealed class ResourceNode : MonoBehaviour
         if (orePrefab != null)
         {
             Vector3 dropPosition = spawnPoint != null ? spawnPoint.position : transform.position;
-            droppedOre = Instantiate(orePrefab, dropPosition, Quaternion.identity);
+            droppedOre = PoolManager.Instance.SpawnFromPool("Ore", dropPosition, Quaternion.identity);
         }
 
         StartCoroutine(RespawnRoutine());
@@ -103,7 +106,7 @@ public sealed class ResourceNode : MonoBehaviour
 
     private IEnumerator RespawnRoutine()
     {
-        yield return new WaitForSeconds(respawnTime);
+        yield return respawnWait; // 캐싱된 변수 사용
         ResetNode();
     }
 

@@ -106,7 +106,7 @@ public sealed class MinerNPC : MonoBehaviour
 
         if (targetConverter == null)
         {
-            targetConverter = FindAnyObjectByType<Converter>();
+            targetConverter = Converter.Instance; // 싱글톤으로 즉시 할당
             if (targetConverter == null)
             {
                 if (hasLoggedMissingConverter == false)

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public sealed class Converter : MonoBehaviour
 {
+    public static Converter Instance { get; private set; }
+
     [Header("Process Points")]
     [SerializeField] private Transform rawOreStackPivot;
     [SerializeField] private Transform meltPoint;
@@ -45,6 +47,15 @@ public sealed class Converter : MonoBehaviour
     private float nextCollectTime;
     private float nextReceiveTime;
     private float nextProcessTime;
+    private Camera cachedCamera;
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
+        cachedCamera = Camera.main;
+    }
 
     private void Update()
     {
@@ -154,16 +165,17 @@ public sealed class Converter : MonoBehaviour
         seq.Append(oreToProcess.transform.DOJump(meltPoint.position, jumpPower, 1, absorbMoveDuration).SetEase(Ease.OutQuad));
         seq.AppendCallback(() =>
         {
-            Destroy(oreToProcess);
+            // Destroy 대신 풀로 반환
+            PoolManager.Instance.ReturnToPool("Ore", oreToProcess);
             SpawnAndProcessIngot();
         });
     }
 
     private void SpawnAndProcessIngot()
     {
-        if (ingotPrefab == null) return;
-
-        GameObject ingot = Instantiate(ingotPrefab, beltStartPoint.position, Quaternion.Euler(ingotSpawnRotation));
+        // PoolManager에서 은괴를 가져옵니다.
+        GameObject ingot = PoolManager.Instance.SpawnFromPool("Ingot", beltStartPoint.position, Quaternion.Euler(ingotSpawnRotation));
+        if (ingot == null) return;
 
         Sequence seq = DOTween.Sequence();
         seq.Append(ingot.transform.DOMove(pressPoint.position, moveDuration).SetEase(Ease.Linear));
@@ -178,16 +190,18 @@ public sealed class Converter : MonoBehaviour
                 pressSeq.Append(customCubePress.DOMove(downPos, 0.1f).SetEase(Ease.InExpo));
                 pressSeq.AppendCallback(() =>
                 {
-                    if (Camera.main != null)
+                    if (cachedCamera != null)
                     {
-                        Camera.main.transform.DOShakePosition(0.1f, 0.1f);
+                        cachedCamera.transform.DOShakePosition(0.1f, 0.1f);
                     }
 
-                    Destroy(ingot);
+                    // 은괴 반환
+                    PoolManager.Instance.ReturnToPool("Ingot", ingot);
 
-                    if (handcuffPrefab != null)
+                    // 수갑 생성 (풀에서 가져오기)
+                    GameObject handcuff = PoolManager.Instance.SpawnFromPool("Handcuff", pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
+                    if (handcuff != null)
                     {
-                        GameObject handcuff = Instantiate(handcuffPrefab, pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
                         MoveToOutput(handcuff);
                     }
                 });
@@ -195,11 +209,12 @@ public sealed class Converter : MonoBehaviour
                 return;
             }
 
-            Destroy(ingot);
-            if (handcuffPrefab != null)
+            // 은괴 반환 및 수갑 생성
+            PoolManager.Instance.ReturnToPool("Ingot", ingot);
+            GameObject handcuffAlt = PoolManager.Instance.SpawnFromPool("Handcuff", pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
+            if (handcuffAlt != null)
             {
-                GameObject handcuff = Instantiate(handcuffPrefab, pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
-                MoveToOutput(handcuff);
+                MoveToOutput(handcuffAlt);
             }
         });
     }
