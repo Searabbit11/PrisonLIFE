@@ -8088,6 +8088,46 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: swayMoveLerp
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: swayMaxOffset
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: curveVelocityLerp
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: swayDirectionLerp
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: curveBackMaxOffset
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: swayReturnDuration
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: swaySpeedForMaxOffset
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 28697594884229296, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: curveSpeedForMaxOffset
+      value: 80
+      objectReference: {fileID: 0}
     - target: {fileID: 2648880307225557099, guid: caa4f0d5dab50c14687cb6074dd53a56,
         type: 3}
       propertyPath: m_Name
@@ -8165,8 +8205,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
         type: 3}
+      propertyPath: miningDetectionOffset.y
+      value: 0.93
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
       propertyPath: miningDetectionOffset.z
-      value: 0.51
+      value: 0.54
       objectReference: {fileID: 0}
     - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
         type: 3}
@@ -8181,12 +8226,17 @@ PrefabInstance:
     - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
         type: 3}
       propertyPath: baseMiningDetectionBoxSize.x
-      value: -0.49
+      value: -0.37
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: baseMiningDetectionBoxSize.y
+      value: 1.54
       objectReference: {fileID: 0}
     - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
         type: 3}
       propertyPath: baseMiningDetectionBoxSize.z
-      value: 0.81
+      value: 0.96
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

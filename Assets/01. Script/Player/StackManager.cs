@@ -5,6 +5,9 @@ using UnityEngine;
 
 public sealed class StackManager : MonoBehaviour
 {
+    private const float MinDeltaTime = 0.0001f;
+    private const float SwayVelocityThreshold = 0.05f;
+
     [Header("Stack Settings")]
     [SerializeField] private int maxStackCount = 10;
     [SerializeField] private float yOffset = 0.18f;
@@ -22,6 +25,18 @@ public sealed class StackManager : MonoBehaviour
     [SerializeField] private float cashYOffset = 0.05f;
     private readonly List<GameObject> cashStack = new List<GameObject>();
 
+    [Header("Carry Sway Visual")]
+    [SerializeField] private float swayMaxOffset = 0.2f;
+    [SerializeField] private float swaySpeedForMaxOffset = 4f;
+    [SerializeField] private float swayDirectionLerp = 12f;
+    [SerializeField] private float swayMoveLerp = 10f;
+    [SerializeField] private float swayReturnDuration = 0.2f;
+
+    [Header("Carry Curve Visual")]
+    [SerializeField] private float curveBackMaxOffset = 0.18f;
+    [SerializeField] private float curveSpeedForMaxOffset = 4f;
+    [SerializeField] private float curveVelocityLerp = 10f;
+
     [Header("UI Settings")]
     [SerializeField] private FloatingText floatingText;
 
@@ -33,6 +48,15 @@ public sealed class StackManager : MonoBehaviour
     public bool HasCash => cashStack.Count > 0;
     public int CashCount => cashStack.Count;
 
+    private Vector3 baseStackPivotLocalPos;
+    private Vector3 baseHandcuffPivotLocalPos;
+    private Vector3 baseCashPivotLocalPos;
+    private Vector3 currentSwayLocalOffset;
+    private Vector3 swayDirectionLocal = Vector3.back;
+    private Vector3 lastOwnerWorldPos;
+    private Tween swayReturnTween;
+    private Vector3 smoothedHorizontalVelocityWorld;
+
     public void IncreaseMaxCapacity(int amount)
     {
         maxStackCount += amount;
@@ -41,6 +65,23 @@ public sealed class StackManager : MonoBehaviour
 
     private void Start()
     {
+        baseStackPivotLocalPos = stackPivot != null ? stackPivot.localPosition : Vector3.zero;
+        baseHandcuffPivotLocalPos = handcuffStackPivot != null ? handcuffStackPivot.localPosition : Vector3.zero;
+        baseCashPivotLocalPos = cashStackPivot != null ? cashStackPivot.localPosition : Vector3.zero;
+        lastOwnerWorldPos = transform.position;
+        ApplyCarrySwayOffset();
+    }
+
+    private void OnDisable()
+    {
+        KillCarrySwayTween();
+        currentSwayLocalOffset = Vector3.zero;
+        ApplyCarrySwayOffset();
+    }
+
+    private void OnDestroy()
+    {
+        KillCarrySwayTween();
     }
 
     /// <summary>
@@ -78,6 +119,7 @@ public sealed class StackManager : MonoBehaviour
 
     private void Update()
     {
+        UpdateCarrySway();
         UpdateStackMovement();
     }
 
@@ -92,29 +134,37 @@ public sealed class StackManager : MonoBehaviour
     // 각 광석이 앞선 오브젝트를 따라가며 부드럽게 휘어지도록 계산
     private void UpdateStackMovement()
     {
+        int stackCount = stackedItems.Count;
+        float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
+        float speedRatio = Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
+        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : Vector3.zero;
+
         for (int i = 0; i < stackedItems.Count; i++)
         {
             Transform current = stackedItems[i];
             Transform target = (i == 0) ? stackPivot : stackedItems[i - 1];
 
-            // 타겟 위치: 앞선 오브젝트의 위치 + 수직 오프셋
             Vector3 targetPos = target.position + Vector3.up * yOffset;
 
-            // 부드러운 위치 추적 (지연 현상이 자연스러운 Swaying을 유도함)
+            if (stackCount > 2)
+            {
+                float t = i / (float)(stackCount - 1);
+                float centerProfile = 4f * t * (1f - t);
+                Vector3 curveOffset = backDir * (curveBackMaxOffset * speedRatio * centerProfile);
+                targetPos += curveOffset;
+            }
+
             current.position = Vector3.Lerp(current.position, targetPos, Time.deltaTime * FollowSpeed);
-            
-            // 회전도 앞선 오브젝트를 따라가게 하여 역동성 추가
             current.rotation = Quaternion.Lerp(current.rotation, target.rotation, Time.deltaTime * FollowSpeed);
         }
     }
-    
-    // 나중에 가공기에 투입할 때 사용할 메서드
     public GameObject PopItem()
     {
         if (stackedItems.Count == 0) return null;
 
         Transform lastItem = stackedItems[^1];
         stackedItems.RemoveAt(stackedItems.Count - 1);
+        lastItem.DOKill();
         
         // 스택에서 빠져나왔으므로 부모 관계 해제
         lastItem.SetParent(null);
@@ -137,6 +187,7 @@ public sealed class StackManager : MonoBehaviour
 
         GameObject last = handcuffItems[^1];
         handcuffItems.RemoveAt(handcuffItems.Count - 1);
+        last.transform.DOKill();
         last.transform.SetParent(null);
         return last;
     }
@@ -176,8 +227,80 @@ public sealed class StackManager : MonoBehaviour
 
         GameObject lastCash = cashStack[^1];
         cashStack.RemoveAt(cashStack.Count - 1);
+        lastCash.transform.DOKill();
         lastCash.transform.SetParent(null);
         return lastCash;
     }
     #endregion
+
+    private void UpdateCarrySway()
+    {
+        Vector3 frameDelta = transform.position - lastOwnerWorldPos;
+        lastOwnerWorldPos = transform.position;
+
+        float deltaTime = Mathf.Max(Time.deltaTime, MinDeltaTime);
+        Vector3 velocity = frameDelta / deltaTime;
+        velocity.y = 0f;
+        float speed = velocity.magnitude;
+        bool isMoving = speed > SwayVelocityThreshold;
+
+        smoothedHorizontalVelocityWorld = Vector3.Lerp(smoothedHorizontalVelocityWorld, velocity, Time.deltaTime * curveVelocityLerp);
+
+        if (isMoving)
+        {
+            KillCarrySwayTween();
+
+            Vector3 localVelocity = transform.InverseTransformDirection(velocity);
+            localVelocity.y = 0f;
+            if (localVelocity.sqrMagnitude > 0.0001f)
+            {
+                Vector3 desiredDirection = (-localVelocity).normalized;
+                swayDirectionLocal = Vector3.Slerp(swayDirectionLocal, desiredDirection, Time.deltaTime * swayDirectionLerp);
+            }
+
+            float speedRatio = Mathf.Clamp01(speed / Mathf.Max(0.01f, swaySpeedForMaxOffset));
+            Vector3 targetOffset = swayDirectionLocal * (swayMaxOffset * speedRatio);
+            currentSwayLocalOffset = Vector3.Lerp(currentSwayLocalOffset, targetOffset, Time.deltaTime * swayMoveLerp);
+            ApplyCarrySwayOffset();
+            return;
+        }
+
+        if (currentSwayLocalOffset.sqrMagnitude <= 0.000001f)
+        {
+            currentSwayLocalOffset = Vector3.zero;
+            ApplyCarrySwayOffset();
+            return;
+        }
+
+        if (swayReturnTween != null && swayReturnTween.IsActive())
+        {
+            return;
+        }
+
+        swayReturnTween = DOTween.To(
+                () => currentSwayLocalOffset,
+                value =>
+                {
+                    currentSwayLocalOffset = value;
+                    ApplyCarrySwayOffset();
+                },
+                Vector3.zero,
+                swayReturnDuration)
+            .SetEase(Ease.OutQuad)
+            .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+            .OnComplete(() => swayReturnTween = null);
+    }
+    private void ApplyCarrySwayOffset()
+    {
+        if (stackPivot != null) stackPivot.localPosition = baseStackPivotLocalPos + currentSwayLocalOffset;
+        if (handcuffStackPivot != null) handcuffStackPivot.localPosition = baseHandcuffPivotLocalPos + currentSwayLocalOffset;
+        if (cashStackPivot != null) cashStackPivot.localPosition = baseCashPivotLocalPos + currentSwayLocalOffset;
+    }
+
+    private void KillCarrySwayTween()
+    {
+        if (swayReturnTween == null) return;
+        if (swayReturnTween.IsActive()) swayReturnTween.Kill();
+        swayReturnTween = null;
+    }
 }
