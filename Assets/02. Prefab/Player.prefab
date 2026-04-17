@@ -1111,16 +1111,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   joystick: {fileID: 0}
   movementSpeed: 5
-  baseMiningDetectionBoxSize: {x: -0.58, y: 1.14, z: 0.09}
-  miningDetectionOffset: {x: 0, y: 1.16, z: 0.6}
+  baseMiningDetectionBoxSize: {x: -0.37, y: 1.54, z: 0.96}
+  miningDetectionOffset: {x: 0, y: 0.93, z: 0.54}
   resourceLayer:
     serializedVersion: 2
     m_Bits: 128
-  drill1DetectionBoxSize: {x: 0.56, y: 1.6, z: 1.44}
-  drill1DetectionOffset: {x: 0, y: 0.88, z: 1.21}
-  drill2DetectionBoxSize: {x: 3.4, y: 2.21, z: 3.68}
-  drill2DetectionOffset: {x: 0, y: 0.65, z: 2.34}
-  drillHitDelay: 0.05
+  drill1DetectionBoxSize: {x: 0.74, y: 1.6, z: 1.44}
+  drill1DetectionOffset: {x: 0, y: 0.88, z: 0.82}
+  drill2DetectionBoxSize: {x: 2.74, y: 2.21, z: 3.68}
+  drill2DetectionOffset: {x: 0, y: 0.65, z: 1.95}
+  drillHitDelay: 0.02
   animator: {fileID: 5321861755812434914}
 --- !u!114 &5193498634419146491
 MonoBehaviour:
@@ -1164,6 +1164,15 @@ MonoBehaviour:
   handcuffYOffset: 0.1
   cashStackPivot: {fileID: 7910353865052575232}
   cashYOffset: 0.05
+  useSway: 1
+  swayMaxOffset: 0
+  swaySpeedForMaxOffset: 0
+  swayDirectionLerp: 0
+  swayMoveLerp: 0
+  swayReturnDuration: 0
+  curveBackMaxOffset: 1
+  curveSpeedForMaxOffset: 80
+  curveVelocityLerp: 60
   floatingText: {fileID: 4432429535959322248}
 --- !u!114 &596175894074982796
 MonoBehaviour:

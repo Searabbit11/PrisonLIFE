@@ -26,6 +26,7 @@ public sealed class StackManager : MonoBehaviour
     private readonly List<GameObject> cashStack = new List<GameObject>();
 
     [Header("Carry Sway Visual")]
+    [SerializeField] private bool useSway = true;
     [SerializeField] private float swayMaxOffset = 0.2f;
     [SerializeField] private float swaySpeedForMaxOffset = 4f;
     [SerializeField] private float swayDirectionLerp = 12f;
@@ -56,6 +57,7 @@ public sealed class StackManager : MonoBehaviour
     private Vector3 lastOwnerWorldPos;
     private Tween swayReturnTween;
     private Vector3 smoothedHorizontalVelocityWorld;
+    private bool isBasePosInitialized;
 
     public void IncreaseMaxCapacity(int amount)
     {
@@ -63,12 +65,38 @@ public sealed class StackManager : MonoBehaviour
         Debug.Log($"[StackManager] Max Capacity increased to: {maxStackCount}");
     }
 
-    private void Start()
+    public void SetUseSway(bool use)
     {
+        InitializeBasePositions(); // 위치 초기화 보장
+        useSway = use;
+        if (!useSway)
+        {
+            KillCarrySwayTween();
+            currentSwayLocalOffset = Vector3.zero;
+            ApplyCarrySwayOffset();
+        }
+    }
+
+    private void Awake()
+    {
+        InitializeBasePositions();
+    }
+
+    private void InitializeBasePositions()
+    {
+        if (isBasePosInitialized) return;
+
         baseStackPivotLocalPos = stackPivot != null ? stackPivot.localPosition : Vector3.zero;
         baseHandcuffPivotLocalPos = handcuffStackPivot != null ? handcuffStackPivot.localPosition : Vector3.zero;
         baseCashPivotLocalPos = cashStackPivot != null ? cashStackPivot.localPosition : Vector3.zero;
         lastOwnerWorldPos = transform.position;
+        
+        isBasePosInitialized = true;
+    }
+
+    private void Start()
+    {
+        // basePos 초기화는 Awake에서 수행됨
         ApplyCarrySwayOffset();
     }
 
@@ -119,7 +147,7 @@ public sealed class StackManager : MonoBehaviour
 
     private void Update()
     {
-        UpdateCarrySway();
+        if (useSway) UpdateCarrySway();
         UpdateStackMovement();
         UpdateHandcuffStackMovement();
         UpdateCashStackMovement();

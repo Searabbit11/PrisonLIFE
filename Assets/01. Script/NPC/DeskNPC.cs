@@ -30,6 +30,7 @@ public sealed class DeskNPC : MonoBehaviour
     private void Awake()
     {
         stackManager = GetComponent<StackManager>();
+        stackManager.SetUseSway(false); // NPC는 흔들림 효과 비활성화
         CacheAnimatorParams();
         handcuffCheckWait = new WaitForSeconds(0.5f);
         interactWait = new WaitForSeconds(interactDelay);

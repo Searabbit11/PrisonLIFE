@@ -14,6 +14,10 @@ public sealed class CameraController : MonoBehaviour
     public bool IsFocusing { get; private set; } = false;
     private const string TweenId = "CameraFocusTween";
 
+    private float currentShakeTimer;
+    private float currentShakeStrength;
+    private float initialShakeDuration;
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -26,6 +30,15 @@ public sealed class CameraController : MonoBehaviour
     public Vector3 GetCameraPositionForTarget(Vector3 targetPosition)
     {
         return targetPosition + offset;
+    }
+
+    public void ShakeCamera(float duration = 0.1f, float strength = 0.1f)
+    {
+        if (IsFocusing) return; // 연출 중일 때는 충돌 방지를 위해 무시
+
+        currentShakeTimer = duration;
+        initialShakeDuration = duration;
+        currentShakeStrength = strength;
     }
 
     /// <summary>
@@ -71,6 +84,15 @@ public sealed class CameraController : MonoBehaviour
     {
         if (target == null || IsFocusing == true) return;
         
-        transform.position = target.position + offset;
+        Vector3 targetPos = target.position + offset;
+
+        if (currentShakeTimer > 0f)
+        {
+            currentShakeTimer -= Time.deltaTime;
+            float progress = Mathf.Clamp01(currentShakeTimer / initialShakeDuration);
+            targetPos += Random.insideUnitSphere * (currentShakeStrength * progress);
+        }
+
+        transform.position = targetPos;
     }
 }

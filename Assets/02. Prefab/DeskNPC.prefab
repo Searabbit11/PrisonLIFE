@@ -730,7 +730,7 @@ Transform:
   m_GameObject: {fileID: 3493803035159218233}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.25, z: 0.25}
+  m_LocalPosition: {x: -0.064703226, y: 1.26807, z: 0.4914819}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1589,7 +1589,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &6189985540835468072
 Transform:
   m_ObjectHideFlags: 0
@@ -1652,6 +1652,15 @@ MonoBehaviour:
   handcuffYOffset: 0.1
   cashStackPivot: {fileID: 0}
   cashYOffset: 0.05
+  useSway: 1
+  swayMaxOffset: 0.2
+  swaySpeedForMaxOffset: 4
+  swayDirectionLerp: 12
+  swayMoveLerp: 10
+  swayReturnDuration: 0.2
+  curveBackMaxOffset: 0.18
+  curveSpeedForMaxOffset: 4
+  curveVelocityLerp: 10
   floatingText: {fileID: 0}
 --- !u!114 &6838272551460724692
 MonoBehaviour:

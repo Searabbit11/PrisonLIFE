@@ -240,11 +240,6 @@ public sealed class Converter : MonoBehaviour
                 pressSeq.Append(customCubePress.DOMove(downPos, 0.1f).SetEase(Ease.InExpo));
                 pressSeq.AppendCallback(() =>
                 {
-                    if (cachedCamera != null)
-                    {
-                        cachedCamera.transform.DOShakePosition(0.1f, 0.1f);
-                    }
-
                     PoolManager.Instance.ReturnToPool("Ingot", ingot);
 
                     GameObject handcuff = PoolManager.Instance.SpawnFromPool("Handcuff", pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
