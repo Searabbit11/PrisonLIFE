@@ -21,6 +21,7 @@ public sealed class CriminalManager : MonoBehaviour
     [SerializeField] private Transform prisonFocusPoint;  // 카메라가 주시할 특정 지점
     [SerializeField] private TMPro.TMP_Text capacityText; // "0/20" 표시용 UI
     [SerializeField] private int maxCapacity = 20;        // 최대 수용 인원
+    [SerializeField] private GameObject upgradeZone;      // 정원 초과 시 활성화될 업그레이드 존
 
 private List<Criminal> criminalQueue = new List<Criminal>();
 private Dictionary<Transform, bool> slotOccupancy = new Dictionary<Transform, bool>();
@@ -109,6 +110,14 @@ public void NotifyQueueFull(Vector3 queuePosition)
 {
     if (hasNotifiedFull == true) return;
     hasNotifiedFull = true;
+
+    if (upgradeZone != null)
+    {
+        upgradeZone.SetActive(true);
+        upgradeZone.transform.localScale = Vector3.zero;
+        upgradeZone.transform.DOKill();
+        upgradeZone.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+    }
 
     // 우선적으로 직접 지정한 지점을 사용하고, 없으면 슬롯들의 중간 지점 사용
     Vector3 focusPos = prisonFocusPoint != null 

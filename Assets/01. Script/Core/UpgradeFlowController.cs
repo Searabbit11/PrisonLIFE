@@ -8,6 +8,15 @@ public sealed class UpgradeFlowController : MonoBehaviour
     [SerializeField] private UnlockZone minerNpcUpgradeZone;
     [SerializeField] private GameObject deskNpcUnlockZone;
 
+    [Header("Prison Upgrade")]
+    [SerializeField] private UnlockZone prisonUpgradeZone;
+    [SerializeField] private GameObject prisonZone1;
+    [SerializeField] private GameObject prisonZone2;
+    [SerializeField] private Transform[] prisonZone2Slots;
+    [SerializeField] private int prisonZone2Capacity = 40;
+    [SerializeField] private Transform prisonZone2FocusPoint;
+    [SerializeField] private float prisonZone2CameraZoom = 1.5f;
+
     [Header("NPC Spawning")]
     [SerializeField] private MinerNPCSpawner minerNpcSpawner;
 
@@ -33,6 +42,11 @@ public sealed class UpgradeFlowController : MonoBehaviour
         if (minerNpcUpgradeZone != null)
         {
             minerNpcUpgradeZone.AllStagesCompleted += HandleMinerNpcAllStagesCompleted;
+        }
+
+        if (prisonUpgradeZone != null)
+        {
+            prisonUpgradeZone.AllStagesCompleted += HandlePrisonAllStagesCompleted;
         }
     }
 
@@ -60,6 +74,11 @@ public sealed class UpgradeFlowController : MonoBehaviour
         if (minerNpcUpgradeZone != null)
         {
             minerNpcUpgradeZone.AllStagesCompleted -= HandleMinerNpcAllStagesCompleted;
+        }
+
+        if (prisonUpgradeZone != null)
+        {
+            prisonUpgradeZone.AllStagesCompleted -= HandlePrisonAllStagesCompleted;
         }
     }
 
@@ -104,5 +123,47 @@ public sealed class UpgradeFlowController : MonoBehaviour
         zone.SetActive(true);
         zone.transform.DOKill();
         zone.transform.DOPunchScale(Vector3.one * 0.2f, 0.5f);
+    }
+
+    private void HandlePrisonAllStagesCompleted(UnlockZone zone)
+    {
+        if (prisonUpgradeZone != null)
+        {
+            // UnlockZone의 MAX 연출(0.5초) 대기 후 축소하며 사라지도록 처리
+            DOVirtual.DelayedCall(0.5f, () =>
+            {
+                if (prisonUpgradeZone == null) return;
+                prisonUpgradeZone.transform.DOKill();
+                prisonUpgradeZone.transform.DOScale(Vector3.zero, 0.4f).SetEase(Ease.InBack).OnComplete(() =>
+                {
+                    if (prisonUpgradeZone != null)
+                    {
+                        prisonUpgradeZone.gameObject.SetActive(false);
+                        prisonUpgradeZone.transform.localScale = Vector3.one; // 차후를 위해 스케일 복구
+                    }
+                    ApplyPrisonUpgrade();
+                });
+            });
+        }
+        else
+        {
+            ApplyPrisonUpgrade();
+        }
+    }
+
+    private void ApplyPrisonUpgrade()
+    {
+        if (prisonZone1 != null) prisonZone1.SetActive(false);
+        if (prisonZone2 != null) prisonZone2.SetActive(true);
+
+        if (CriminalManager.Instance != null)
+        {
+            CriminalManager.Instance.UpgradeCapacity(prisonZone2Capacity, prisonZone2Slots);
+        }
+
+        if (prisonZone2FocusPoint != null && CameraController.Instance != null)
+        {
+            CameraController.Instance.FocusTarget(prisonZone2FocusPoint.position, 1.5f, 2.0f, prisonZone2CameraZoom);
+        }
     }
 }

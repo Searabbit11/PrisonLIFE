@@ -73,6 +73,14 @@ public sealed class PlayerController : MonoBehaviour
 
     private void HandleInput()
     {
+        if (CameraController.Instance != null && CameraController.Instance.IsFocusing == true)
+        {
+            moveDirection = Vector3.zero;
+            currentInputMagnitude = 0f;
+            SetMiningState(false);
+            return;
+        }
+
         if (joystick == null || joystick.Direction == Vector2.zero) 
         {
             moveDirection = Vector3.zero;
