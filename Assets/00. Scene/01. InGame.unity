@@ -2593,12 +2593,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!4 &607692078 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6286528712235023627, guid: 9cca3b6812858404b99eaa88a9384837,
-    type: 3}
-  m_PrefabInstance: {fileID: 4700461619664429778}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &609756283
 GameObject:
   m_ObjectHideFlags: 0
@@ -3801,12 +3795,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1611190223}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!4 &869785432 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6447397732088055602, guid: a96c454180a0de34cbc8190c60558587,
-    type: 3}
-  m_PrefabInstance: {fileID: 8190740087810146999}
+--- !u!1 &867428824
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 867428825}
+  m_Layer: 0
+  m_Name: DeskNPCPickUPPoint (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &867428825
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 867428824}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.95, y: 0, z: 4.367}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1686145014}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &873344981
 GameObject:
   m_ObjectHideFlags: 0
@@ -8174,6 +8193,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: caa4f0d5dab50c14687cb6074dd53a56, type: 3}
+--- !u!1 &1668440344
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1668440345}
+  m_Layer: 0
+  m_Name: DeskNPCPickUPPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1668440345
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1668440344}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.25, y: 0, z: 0.75}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1686145014}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1670465112
 GameObject:
   m_ObjectHideFlags: 0
@@ -9164,7 +9214,7 @@ PrefabInstance:
     - target: {fileID: 5271673585119703707, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
@@ -9184,22 +9234,22 @@ PrefabInstance:
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.13052304
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.9914453
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
@@ -9209,7 +9259,7 @@ PrefabInstance:
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 195
+      value: 180
       objectReference: {fileID: 0}
     - target: {fileID: 6189985540835468072, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
@@ -9220,7 +9270,7 @@ PrefabInstance:
         type: 3}
       propertyPath: pickupPoint
       value: 
-      objectReference: {fileID: 607692078}
+      objectReference: {fileID: 867428825}
     - target: {fileID: 6838272551460724692, guid: a3456f418433ebe4e91f4e5056f72f47,
         type: 3}
       propertyPath: deliveryDesk
@@ -9230,7 +9280,22 @@ PrefabInstance:
         type: 3}
       propertyPath: dropoffPoint
       value: 
-      objectReference: {fileID: 869785432}
+      objectReference: {fileID: 1668440345}
+    - target: {fileID: 8215785019921506576, guid: a3456f418433ebe4e91f4e5056f72f47,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.064703226
+      objectReference: {fileID: 0}
+    - target: {fileID: 8215785019921506576, guid: a3456f418433ebe4e91f4e5056f72f47,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.01807
+      objectReference: {fileID: 0}
+    - target: {fileID: 8215785019921506576, guid: a3456f418433ebe4e91f4e5056f72f47,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.4914819
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -10112,6 +10177,14 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1295307790}
+    - targetCorrespondingSourceObject: {fileID: 5263732771167901437, guid: a96c454180a0de34cbc8190c60558587,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1668440345}
+    - targetCorrespondingSourceObject: {fileID: 5263732771167901437, guid: a96c454180a0de34cbc8190c60558587,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 867428825}
     - targetCorrespondingSourceObject: {fileID: 3393054490608221368, guid: a96c454180a0de34cbc8190c60558587,
         type: 3}
       insertIndex: -1
