@@ -44,6 +44,12 @@ public sealed class Converter : MonoBehaviour
     [SerializeField] private float collectInterval = 0.1f;
     private readonly List<GameObject> producedHandcuffs = new List<GameObject>();
 
+    [Header("Capacity Settings")]
+    [SerializeField] private int maxRawOreCapacity = 50;
+    [SerializeField] private int maxHandcuffCapacity = 50;
+    [SerializeField] private FloatingText inputFloatingText;
+    [SerializeField] private FloatingText outputFloatingText;
+
     private float nextCollectTime;
     private float nextReceiveTime;
     private float nextProcessTime;
@@ -65,6 +71,14 @@ public sealed class Converter : MonoBehaviour
     public void ProcessOreInput(GameObject player)
     {
         if (Time.time < nextReceiveTime) return;
+
+        // 입구 광석 적재 한도 체크
+        if (rawOresOnFloor.Count >= maxRawOreCapacity)
+        {
+            if (inputFloatingText != null) inputFloatingText.Show("MAX");
+            return;
+        }
+
         if (player.TryGetComponent<StackManager>(out var playerStack) == false) return;
 
         GameObject ore = playerStack.PopItem();
@@ -77,6 +91,14 @@ public sealed class Converter : MonoBehaviour
     public void ReceiveNpcOre(GameObject ore)
     {
         if (ore == null) return;
+        
+        // NPC 입력도 한도 체크
+        if (rawOresOnFloor.Count >= maxRawOreCapacity)
+        {
+            if (inputFloatingText != null) inputFloatingText.Show("MAX");
+            return;
+        }
+
         ReceiveOreToFloor(ore);
     }
 
@@ -141,7 +163,16 @@ public sealed class Converter : MonoBehaviour
 
     private void ProcessRawOresAutomatically()
     {
+        // 출력물 적재 공간이 꽉 찼으면 프로세스 중단
+        if (producedHandcuffs.Count >= maxHandcuffCapacity)
+        {
+            if (outputFloatingText != null) outputFloatingText.Show("MAX");
+            return;
+        }
+
         if (Time.time < nextProcessTime || rawOresOnFloor.Count == 0) return;
+        
+        // ... (이하 동일)
 
         int lastIndex = rawOresOnFloor.Count - 1;
         GameObject oreToProcess = rawOresOnFloor[lastIndex];

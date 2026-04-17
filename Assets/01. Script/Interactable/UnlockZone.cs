@@ -39,6 +39,7 @@ public sealed class UnlockZone : MonoBehaviour
     [Header("Animation")]
     [SerializeField] private float consumeInterval = 0.1f;
     [SerializeField] private float jumpPower = 2f;
+    public bool hideOnCompleteWithAnimation = false;
 
     public event Action<UnlockZone, int, UnlockStage> StageCompleted;
     public event Action<UnlockZone> AllStagesCompleted;
@@ -186,7 +187,29 @@ public sealed class UnlockZone : MonoBehaviour
             return;
         }
 
-        ShowMaxState();
+        if (hideOnCompleteWithAnimation == true)
+        {
+            if (zoneCollider != null) zoneCollider.enabled = false;
+            
+            // 전체 오브젝트가 축소될 때까지 시각적 요소를 유지하되, 텍스트가 MAX로 변하지 않도록 빈칸 처리
+            if (costText != null) costText.text = "";
+
+            // Canvas가 UnlockZone 외부에 분리되어 있을 가능성을 대비해 직접 찾아서 쪼그라들게 합니다.
+            Canvas uiCanvas = costText != null ? costText.GetComponentInParent<Canvas>() : GetComponentInChildren<Canvas>();
+            if (uiCanvas != null)
+            {
+                uiCanvas.transform.DOKill();
+                uiCanvas.transform.DOScale(Vector3.zero, 0.4f).SetEase(Ease.InBack).OnComplete(() => uiCanvas.gameObject.SetActive(false));
+            }
+
+            transform.DOKill();
+            transform.DOScale(Vector3.zero, 0.4f).SetEase(Ease.InBack).OnComplete(() => gameObject.SetActive(false));
+        }
+        else
+        {
+            ShowMaxState();
+        }
+
         if (activePlayerId != -1)
         {
             ReleaseZoneClaimById(activePlayerId);

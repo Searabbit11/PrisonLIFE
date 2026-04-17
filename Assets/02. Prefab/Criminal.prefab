@@ -75,7 +75,7 @@ GameObject:
   - component: {fileID: 8216497186598379488}
   m_Layer: 0
   m_Name: Man_Legs_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -330,7 +330,7 @@ GameObject:
   - component: {fileID: 269554774614197339}
   m_Layer: 5
   m_Name: CountText
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -463,7 +463,7 @@ GameObject:
   - component: {fileID: 7909086111003829119}
   m_Layer: 0
   m_Name: Man_Arms_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -680,7 +680,7 @@ GameObject:
   - component: {fileID: 3772357313444460403}
   m_Layer: 0
   m_Name: root
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -713,7 +713,7 @@ GameObject:
   - component: {fileID: 9209377966539847886}
   m_Layer: 0
   m_Name: Man_Head_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -804,7 +804,7 @@ GameObject:
   - component: {fileID: 4824845275912985527}
   m_Layer: 0
   m_Name: DeliverPivot
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 7250588514170254948, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -868,7 +868,7 @@ GameObject:
   - component: {fileID: 910065663607312714}
   m_Layer: 0
   m_Name: Man_Eyes_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -986,7 +986,7 @@ GameObject:
   - component: {fileID: 6874078520145890173}
   m_Layer: 5
   m_Name: Image
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1316,7 +1316,7 @@ GameObject:
   - component: {fileID: 3606383740254481593}
   m_Layer: 0
   m_Name: Man_Bag_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1407,7 +1407,7 @@ GameObject:
   - component: {fileID: 7739149690559451339}
   m_Layer: 0
   m_Name: Man_Cloth_Face_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1499,7 +1499,7 @@ GameObject:
   - component: {fileID: 1068861633829980042}
   m_Layer: 0
   m_Name: Man_Pullover_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1699,7 +1699,7 @@ GameObject:
   - component: {fileID: 5629223959437998340}
   m_Layer: 0
   m_Name: Man_Jacket_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1802,7 +1802,7 @@ GameObject:
   - component: {fileID: 3173728141915606612}
   m_Layer: 0
   m_Name: Man_Jaw_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2144,7 +2144,7 @@ GameObject:
   - component: {fileID: 1553060013021247716}
   m_Layer: 5
   m_Name: Image
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2286,7 +2286,7 @@ GameObject:
   - component: {fileID: 4463351801679759337}
   m_Layer: 5
   m_Name: CountCanvas
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2386,7 +2386,7 @@ GameObject:
   - component: {fileID: 2891354667488735435}
   m_Layer: 0
   m_Name: Man_Body_For_Jacket_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2615,7 +2615,7 @@ GameObject:
   - component: {fileID: 655179843216846745}
   m_Layer: 0
   m_Name: Man_Pants_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2742,7 +2742,7 @@ GameObject:
   - component: {fileID: 6898724613056571397}
   m_Layer: 0
   m_Name: Man_Shoes_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2958,9 +2958,11 @@ GameObject:
   - component: {fileID: 7104173005731302790}
   - component: {fileID: 8277992291432465998}
   - component: {fileID: 4193307880903721265}
+  - component: {fileID: 2986090614329671826}
+  - component: {fileID: 23188472053822879}
   m_Layer: 0
   m_Name: Criminal
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3043,6 +3045,60 @@ MonoBehaviour:
   - {fileID: 8782889337174743911}
   animator: {fileID: 8277992291432465998}
   moveSpeed: 3
+  rotationSpeed: 0.2
+  exitRotationAngle: 180
+  minRequiredHandcuffs: 2
+  maxRequiredHandcuffs: 5
+--- !u!54 &2986090614329671826
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6914164842875327711}
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 80
+  m_CollisionDetection: 0
+--- !u!136 &23188472053822879
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6914164842875327711}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.20685065
+  m_Height: 2.3533354
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.6766677, z: -0.043995976}
 --- !u!1 &6975552248105356300
 GameObject:
   m_ObjectHideFlags: 0
@@ -3121,7 +3177,7 @@ GameObject:
   - component: {fileID: 6317545877914433499}
   m_Layer: 0
   m_Name: Man_Balaclava_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3276,7 +3332,7 @@ GameObject:
   - component: {fileID: 3501788679308543458}
   m_Layer: 0
   m_Name: Man_Feet_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3467,7 +3523,7 @@ GameObject:
   - component: {fileID: 14213917516696759}
   m_Layer: 0
   m_Name: Man_Half_ Body_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3760,7 +3816,7 @@ GameObject:
   - component: {fileID: 4153971902236853358}
   m_Layer: 0
   m_Name: Man_Pullover_For_Jacket_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3888,7 +3944,7 @@ GameObject:
   - component: {fileID: 2551802462428341048}
   m_Layer: 0
   m_Name: Man_Body_Mesh
-  m_TagString: Untagged
+  m_TagString: NPC
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

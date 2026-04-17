@@ -3,6 +3,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
 public sealed class Criminal : MonoBehaviour
 {
     private static readonly int IsWalking = Animator.StringToHash("isWalking");
@@ -19,19 +20,33 @@ public sealed class Criminal : MonoBehaviour
 
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 3f;
+    [SerializeField] private float rotationSpeed = 0.2f;
+    [SerializeField] private float exitRotationAngle = 180f;
+
+    [Header("Handcuff Settings")]
+    [SerializeField] private int minRequiredHandcuffs = 2;
+    [SerializeField] private int maxRequiredHandcuffs = 5;
 
     private Camera mainCamera;
     private int requiredHandcuffs;
     private int initialRequiredHandcuffs;
     private bool isArrested;
+    private bool isCounted;
 
     public bool NeedsHandcuffs => requiredHandcuffs > 0 && !isArrested;
+
+    public void OnPassedGate()
+    {
+        if (isCounted == true) return;
+        isCounted = true;
+        CriminalManager.Instance.AddPrisonerVisualCount();
+    }
 
     private void Start()
     {
         mainCamera = Camera.main;
 
-        requiredHandcuffs = Random.Range(2, 5);
+        requiredHandcuffs = Random.Range(minRequiredHandcuffs, maxRequiredHandcuffs);
         initialRequiredHandcuffs = requiredHandcuffs;
         UpdateUI();
 
@@ -178,12 +193,9 @@ public sealed class Criminal : MonoBehaviour
             .SetEase(Ease.Linear)
             .WaitForCompletion();
 
-        // 3. 도착 후 반대 방향으로 정렬 (180도 회전 추가)
-        Quaternion targetRotation = targetSlot.rotation * Quaternion.Euler(0, 180, 0);
+        // 3. 도착 후 반대 방향으로 정렬
+        Quaternion targetRotation = targetSlot.rotation * Quaternion.Euler(0, exitRotationAngle, 0);
         yield return transform.DORotateQuaternion(targetRotation, 0.5f).WaitForCompletion();
-
-        // [추가] 실제로 자리에 도착하여 정렬이 끝난 순간 카운트 증가
-        CriminalManager.Instance.AddPrisonerVisualCount();
 
         animator.SetBool(IsWalking, false);
     }

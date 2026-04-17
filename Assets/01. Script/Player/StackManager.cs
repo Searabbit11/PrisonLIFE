@@ -23,9 +23,7 @@ public sealed class StackManager : MonoBehaviour
     private readonly List<GameObject> cashStack = new List<GameObject>();
 
     [Header("UI Settings")]
-    [SerializeField] private TMP_Text maxTextLabel;
-
-    private bool isMaxEffectPlaying;
+    [SerializeField] private FloatingText floatingText;
 
     public bool IsFull => stackedItems.Count >= MaxStackCount;
     public int MaxCarryCount => MaxStackCount;
@@ -37,10 +35,6 @@ public sealed class StackManager : MonoBehaviour
 
     private void Start()
     {
-        if (maxTextLabel != null)
-        {
-            maxTextLabel.gameObject.SetActive(false);
-        }
     }
 
     /// <summary>
@@ -50,7 +44,7 @@ public sealed class StackManager : MonoBehaviour
     {
         if (IsFull == true)
         {
-            Debug.Log("Stack is Full!");
+            ShowMaxEffect();
             return;
         }
 
@@ -83,28 +77,10 @@ public sealed class StackManager : MonoBehaviour
 
     public void ShowMaxEffect()
     {
-        if (maxTextLabel == null || isMaxEffectPlaying == true) return;
-
-        isMaxEffectPlaying = true;
-
-        // 기존 실행 중인 트윈이 있다면 중단
-        maxTextLabel.DOKill();
-        maxTextLabel.gameObject.SetActive(true);
-
-        // 초기화
-        maxTextLabel.transform.localPosition = Vector3.zero;
-        maxTextLabel.alpha = 1f;
-
-        // 위로 떠오르며 잠시 멈췄다가 페이드 아웃되는 연출
-        Sequence seq = DOTween.Sequence();
-        seq.Append(maxTextLabel.transform.DOLocalMoveY(0.5f, 0.2f).SetRelative(true).SetEase(Ease.OutQuad));
-        seq.AppendInterval(1.0f);
-        seq.Append(maxTextLabel.DOFade(0f, 0.5f).SetEase(Ease.InQuad));
-        seq.OnComplete(() => 
+        if (floatingText != null)
         {
-            maxTextLabel.gameObject.SetActive(false);
-            isMaxEffectPlaying = false;
-        });
+            floatingText.Show("MAX");
+        }
     }
     
     // 각 광석이 앞선 오브젝트를 따라가며 부드럽게 휘어지도록 계산

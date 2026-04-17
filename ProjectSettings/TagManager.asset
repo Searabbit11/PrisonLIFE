@@ -7,6 +7,7 @@ TagManager:
   - Item
   - Ore
   - MiningZone
+  - NPC
   layers:
   - Default
   - TransparentFX

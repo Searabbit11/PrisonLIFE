@@ -23,7 +23,6 @@ public sealed class PlayerController : MonoBehaviour
     private StackManager stackManager;
     private EquipmentManager equipmentManager;
     private Vector3 moveDirection = Vector3.zero;
-    private float currentInputMagnitude = 0f;
     private bool isMiningState = false; // 중복 호출 방지용
     
     public bool IsInMiningZone { get; set; }
@@ -76,7 +75,6 @@ public sealed class PlayerController : MonoBehaviour
         if (CameraController.Instance != null && CameraController.Instance.IsFocusing == true)
         {
             moveDirection = Vector3.zero;
-            currentInputMagnitude = 0f;
             SetMiningState(false);
             return;
         }
@@ -84,32 +82,33 @@ public sealed class PlayerController : MonoBehaviour
         if (joystick == null || joystick.Direction == Vector2.zero) 
         {
             moveDirection = Vector3.zero;
-            currentInputMagnitude = 0f;
             return;
         }
 
         Vector2 input = joystick.Direction;
-        currentInputMagnitude = input.magnitude;
 
-        if (currentInputMagnitude < 0.05f) 
+        if (input.sqrMagnitude < 0.05f * 0.05f) 
         {
             moveDirection = Vector3.zero;
             return;
         }
 
+        // 카메라의 Yaw(Y축 회전) 값 가져오기
+        float cameraYaw = Camera.main != null ? Camera.main.transform.eulerAngles.y : 0f;
+
         // 8방향 이동을 위한 입력 스냅 (45도 단위)
-        float angle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg;
-        float snappedAngle = Mathf.Round(angle / SnappingAngle) * SnappingAngle;
+        float inputAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg;
+        float snappedAngle = Mathf.Round(inputAngle / SnappingAngle) * SnappingAngle;
         
-        // 이동 방향을 즉시 갱신
-        moveDirection = Quaternion.Euler(0, snappedAngle, 0) * Vector3.forward;
+        // 카메라 회전값을 더해 최종 이동 방향 결정
+        moveDirection = Quaternion.Euler(0, snappedAngle + cameraYaw, 0) * Vector3.forward;
     }
 
     private void HandleMovement()
     {
         if (moveDirection == Vector3.zero) return;
 
-        // 즉각적인 반응을 위해 transform.Translate 또는 position 직접 변경 사용
+        // 조이스틱 강도 반영 제거, 고정 속도 이동
         transform.position += moveDirection * (movementSpeed * Time.deltaTime);
     }
 
@@ -125,7 +124,9 @@ public sealed class PlayerController : MonoBehaviour
     {
         if (animator != null)
         {
-            animator.SetFloat(Speed, currentInputMagnitude);
+            // 이동 여부에 따라 애니메이션 속도 파라미터를 0 또는 1로 고정
+            float targetSpeed = moveDirection == Vector3.zero ? 0f : 1f;
+            animator.SetFloat(Speed, targetSpeed);
         }
     }
 

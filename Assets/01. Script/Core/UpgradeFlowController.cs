@@ -61,6 +61,11 @@ public sealed class UpgradeFlowController : MonoBehaviour
         {
             deskNpcUnlockZone.SetActive(false);
         }
+
+        if (prisonUpgradeZone != null)
+        {
+            prisonUpgradeZone.hideOnCompleteWithAnimation = true;
+        }
     }
 
     private void OnDisable()
@@ -127,28 +132,12 @@ public sealed class UpgradeFlowController : MonoBehaviour
 
     private void HandlePrisonAllStagesCompleted(UnlockZone zone)
     {
-        if (prisonUpgradeZone != null)
-        {
-            // UnlockZone의 MAX 연출(0.5초) 대기 후 축소하며 사라지도록 처리
-            DOVirtual.DelayedCall(0.5f, () =>
-            {
-                if (prisonUpgradeZone == null) return;
-                prisonUpgradeZone.transform.DOKill();
-                prisonUpgradeZone.transform.DOScale(Vector3.zero, 0.4f).SetEase(Ease.InBack).OnComplete(() =>
-                {
-                    if (prisonUpgradeZone != null)
-                    {
-                        prisonUpgradeZone.gameObject.SetActive(false);
-                        prisonUpgradeZone.transform.localScale = Vector3.one; // 차후를 위해 스케일 복구
-                    }
-                    ApplyPrisonUpgrade();
-                });
-            });
-        }
-        else
+        // UnlockZone 자체에서 0.4초 동안 DOScale로 사라지는 연출을 진행하므로,
+        // 그 타이밍에 맞춰서 감옥 업그레이드 연출을 실행합니다.
+        DOVirtual.DelayedCall(0.4f, () => 
         {
             ApplyPrisonUpgrade();
-        }
+        });
     }
 
     private void ApplyPrisonUpgrade()
