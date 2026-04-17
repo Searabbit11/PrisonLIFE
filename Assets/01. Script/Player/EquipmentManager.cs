@@ -2,12 +2,18 @@ using UnityEngine;
 
 public sealed class EquipmentManager : MonoBehaviour
 {
-    // TODO: 에디터에서 맞춘 정확한 로컬 좌표값을 아래 상수에 기입하세요.
-    private static readonly Vector3 DefaultPickaxePos = new Vector3(0f, 0f, 0f);
-    private static readonly Vector3 DefaultPickaxeRot = new Vector3(0f, 0f, 0f);
-
     [Header("Sockets")]
-    [SerializeField] private Transform weaponSocket;
+    [SerializeField] private Transform weaponSocket; // 곡괭이 소켓
+    [SerializeField] private Transform drill1Socket; // 드릴 1 전용 소켓
+    [SerializeField] private Transform drill2Socket; // 드릴 2 전용 소켓
+
+    [Header("Offsets")]
+    [SerializeField] private Vector3 defaultPickaxePos = Vector3.zero;
+    [SerializeField] private Vector3 defaultPickaxeRot = Vector3.zero;
+    [SerializeField] private Vector3 defaultDrill1Pos = Vector3.zero;
+    [SerializeField] private Vector3 defaultDrill1Rot = Vector3.zero;
+    [SerializeField] private Vector3 defaultDrill2Pos = Vector3.zero;
+    [SerializeField] private Vector3 defaultDrill2Rot = Vector3.zero;
 
     [Header("Default Equipment")]
     [SerializeField] private GameObject defaultPickaxePrefab;
@@ -66,23 +72,40 @@ public sealed class EquipmentManager : MonoBehaviour
     /// </summary>
     public void EquipWeapon(GameObject weaponPrefab)
     {
-        // 기존 장비가 있다면 제거
         if (currentEquippedWeapon != null)
         {
             Destroy(currentEquippedWeapon);
         }
 
-        // 프리팹 생성 및 소켓 자식으로 설정
-        currentEquippedWeapon = Instantiate(weaponPrefab, weaponSocket);
+        Transform targetSocket = weaponSocket;
+        Vector3 targetPos = defaultPickaxePos;
+        Vector3 targetRot = defaultPickaxeRot;
+
+        // 프리팹 이름에 따라 대상 소켓과 오프셋을 분기
+        if (weaponPrefab.name.Contains("Drill 1"))
+        {
+            targetSocket = drill1Socket != null ? drill1Socket : weaponSocket;
+            targetPos = defaultDrill1Pos;
+            targetRot = defaultDrill1Rot;
+        }
+        else if (weaponPrefab.name.Contains("Drill 2"))
+        {
+            targetSocket = drill2Socket != null ? drill2Socket : weaponSocket;
+            targetPos = defaultDrill2Pos;
+            targetRot = defaultDrill2Rot;
+        }
+
+        // 프리팹 생성 및 지정된 소켓의 자식으로 설정
+        currentEquippedWeapon = Instantiate(weaponPrefab, targetSocket);
         
-        // 로컬 좌표 및 회전값 초기화 (에디터 설정값 강제 적용)
+        // 로컬 좌표 및 회전값 적용
         Transform weaponTransform = currentEquippedWeapon.transform;
-        weaponTransform.localPosition = DefaultPickaxePos;
-        weaponTransform.localRotation = Quaternion.Euler(DefaultPickaxeRot);
+        weaponTransform.localPosition = targetPos;
+        weaponTransform.localRotation = Quaternion.Euler(targetRot);
         
         SetWeaponVisibility(false);
 
-        Debug.Log($"Equipped New Weapon: {weaponPrefab.name}");
+        Debug.Log($"Equipped New Weapon: {weaponPrefab.name} on {targetSocket.name}");
     }
 
     /// <summary>
