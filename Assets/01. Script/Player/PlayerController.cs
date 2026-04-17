@@ -5,6 +5,7 @@ public sealed class PlayerController : MonoBehaviour
 {
     private static readonly int Speed = Animator.StringToHash("Speed");
     private static readonly int IsMining = Animator.StringToHash("IsMining");
+    private static readonly int IsDrill = Animator.StringToHash("IsDrill"); // [추가] 드릴 애니메이션 파라미터 (애니메이터 컨트롤러 세팅 필요)
     private const float RotationSpeed = 15f;
     private const float SnappingAngle = 45f;
     private const float MinInputMagnitude = 0.1f;
@@ -171,6 +172,12 @@ public sealed class PlayerController : MonoBehaviour
             // 이동 여부에 따라 애니메이션 속도 파라미터를 0 또는 1로 고정
             float targetSpeed = moveDirection == Vector3.zero ? 0f : 1f;
             animator.SetFloat(Speed, targetSpeed);
+
+            // 매 프레임 장비 상태를 애니메이터에 동기화하여 지연 발생 방지
+            if (equipmentManager != null)
+            {
+                animator.SetBool(IsDrill, equipmentManager.IsDrillEquipped);
+            }
         }
     }
 
@@ -219,7 +226,7 @@ public sealed class PlayerController : MonoBehaviour
         // 지정된 간격으로 순차 타격
         foreach (var node in nodes)
         {
-            if (node != null && stackManager.IsFull == false) // 중간에 파괴되었거나 스택이 꽉 차면 중단
+            if (node != null) // 중간에 파괴되었으면 무시, 스택이 꽉 차도 채굴은 진행
             {
                 node.TakeDamage(1, stackManager);
                 yield return new WaitForSeconds(drillHitDelay);

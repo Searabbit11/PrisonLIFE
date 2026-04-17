@@ -565,6 +565,8 @@ MonoBehaviour:
   consumeInterval: 0.1
   jumpPower: 2
   hideOnCompleteWithAnimation: 0
+  capacityIncreasePerStage: 10
+  miningRangeIncreasePerStage: {x: 1, y: 0, z: 1}
 --- !u!4 &147286430
 Transform:
   m_ObjectHideFlags: 0
@@ -644,6 +646,8 @@ MonoBehaviour:
   consumeInterval: 0.1
   jumpPower: 2
   hideOnCompleteWithAnimation: 1
+  capacityIncreasePerStage: 10
+  miningRangeIncreasePerStage: {x: 1, y: 0, z: 1}
 --- !u!4 &158307051
 Transform:
   m_ObjectHideFlags: 0
@@ -3325,6 +3329,8 @@ MonoBehaviour:
   consumeInterval: 0.1
   jumpPower: 2
   hideOnCompleteWithAnimation: 0
+  capacityIncreasePerStage: 10
+  miningRangeIncreasePerStage: {x: 1, y: 0, z: 1}
 --- !u!4 &669392739
 Transform:
   m_ObjectHideFlags: 0
@@ -5382,6 +5388,8 @@ MonoBehaviour:
   consumeInterval: 0.1
   jumpPower: 2
   hideOnCompleteWithAnimation: 0
+  capacityIncreasePerStage: 10
+  miningRangeIncreasePerStage: {x: 1, y: 0, z: 1}
 --- !u!4 &1236650288
 Transform:
   m_ObjectHideFlags: 0
@@ -8287,6 +8295,86 @@ PrefabInstance:
       propertyPath: joystick
       value: 
       objectReference: {fileID: 1416568373}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drillMiningRadius
+      value: 0.91
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill1DetectionOffset.y
+      value: 0.88
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill1DetectionOffset.z
+      value: 0.84
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill2DetectionOffset.y
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill2DetectionOffset.z
+      value: 1.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: miningDetectionOffset.y
+      value: 1.16
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: miningDetectionOffset.z
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill1DetectionBoxSize.x
+      value: 1.16
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill1DetectionBoxSize.y
+      value: 1.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill1DetectionBoxSize.z
+      value: 1.22
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill2DetectionBoxSize.x
+      value: 3.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill2DetectionBoxSize.y
+      value: 2.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: drill2DetectionBoxSize.z
+      value: 2.73
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: baseMiningDetectionBoxSize.x
+      value: 0.47
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: baseMiningDetectionBoxSize.y
+      value: 1.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 8191468778039210179, guid: caa4f0d5dab50c14687cb6074dd53a56,
+        type: 3}
+      propertyPath: baseMiningDetectionBoxSize.z
+      value: 0.77
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 229891728238606062, guid: caa4f0d5dab50c14687cb6074dd53a56, type: 3}
