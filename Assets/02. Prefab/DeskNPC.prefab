@@ -705,6 +705,37 @@ Transform:
   - {fileID: 1501135467000320892}
   m_Father: {fileID: 849572482689807640}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3493803035159218233
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8215785019921506576}
+  m_Layer: 0
+  m_Name: HandcuffStackPivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8215785019921506576
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3493803035159218233}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.25, z: 0.25}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6189985540835468072}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3593168487376366677
 GameObject:
   m_ObjectHideFlags: 0
@@ -1550,6 +1581,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6189985540835468072}
   - component: {fileID: 2490649918496810052}
+  - component: {fileID: 3463463444711870686}
+  - component: {fileID: 6838272551460724692}
   m_Layer: 0
   m_Name: DeskNPC
   m_TagString: Untagged
@@ -1570,6 +1603,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 8215785019921506576}
   - {fileID: 3172830550692942034}
   - {fileID: 7277604211212189952}
   - {fileID: 3504359382530547275}
@@ -1588,7 +1622,7 @@ Animator:
   m_GameObject: {fileID: 5271673585119703707}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: bdd7a03fd93bf2d4cb6babd63ceabee8, type: 3}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: adf5ab4884824a44f8b2662f1a0e08c7, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
   m_ApplyRootMotion: 1
@@ -1599,6 +1633,45 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &3463463444711870686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5271673585119703707}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22cecdd329e9b704da6a01e987f6a34e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxStackCount: 10
+  yOffset: 0.18
+  stackPivot: {fileID: 0}
+  handcuffStackPivot: {fileID: 8215785019921506576}
+  handcuffYOffset: 0.1
+  cashStackPivot: {fileID: 0}
+  cashYOffset: 0.05
+  floatingText: {fileID: 0}
+--- !u!114 &6838272551460724692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5271673585119703707}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afba7fd91d9ae6645910eabf72b7e2f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pickupPoint: {fileID: 0}
+  dropoffPoint: {fileID: 0}
+  deliveryDesk: {fileID: 0}
+  animator: {fileID: 2490649918496810052}
+  moveSpeed: 2.5
+  interactDelay: 0.2
+  waitTimeout: 2
 --- !u!1 &5386759940128589821
 GameObject:
   m_ObjectHideFlags: 0

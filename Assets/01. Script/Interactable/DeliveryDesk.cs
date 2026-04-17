@@ -108,6 +108,25 @@ public sealed class DeliveryDesk : MonoBehaviour
         }
     }
 
+    public void ProcessNpcHandcuff(StackManager npcStack)
+    {
+        if (npcStack.HasHandcuffs == true && deskHandcuffs.Count < maxHandcuffCapacity)
+        {
+            GameObject handcuff = npcStack.PopHandcuff();
+            if (handcuff != null)
+            {
+                int currentIndex = deskHandcuffs.Count;
+                deskHandcuffs.Add(handcuff);
+
+                Vector3 targetLocalPos = new Vector3(0, currentIndex * stackYOffset, 0);
+                
+                handcuff.transform.SetParent(deskStackPivot);
+                handcuff.transform.DOLocalJump(targetLocalPos, jumpPower, 1, jumpDuration).SetEase(Ease.OutQuad);
+                handcuff.transform.DOLocalRotate(Vector3.zero, jumpDuration);
+            }
+        }
+    }
+
     private void HandleHandcuffDelivery()
     {
         if (Time.time < nextDeliveryTime || deskHandcuffs.Count == 0) return;

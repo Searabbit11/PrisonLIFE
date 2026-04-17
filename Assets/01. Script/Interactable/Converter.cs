@@ -88,6 +88,11 @@ public sealed class Converter : MonoBehaviour
         ReceiveOreToFloor(ore);
     }
 
+    public bool HasProducedHandcuffs()
+    {
+        return producedHandcuffs.Count > 0;
+    }
+
     public void ReceiveNpcOre(GameObject ore)
     {
         if (ore == null) return;
