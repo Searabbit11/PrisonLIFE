@@ -43,6 +43,7 @@ public sealed class UnlockZone : MonoBehaviour
 
     [Header("Upgrade Settings")]
     [SerializeField] private int capacityIncreasePerStage = 10;
+    [SerializeField] private Vector3 miningRangeIncreasePerStage = new Vector3(1f, 0f, 1f);
 
     public event Action<UnlockZone, int, UnlockStage> StageCompleted;
     public event Action<UnlockZone> AllStagesCompleted;
@@ -237,6 +238,11 @@ public sealed class UnlockZone : MonoBehaviour
                 if (equipmentManager.TryGetComponent<StackManager>(out var playerStack))
                 {
                     playerStack.IncreaseMaxCapacity(capacityIncreasePerStage);
+                }
+
+                if (equipmentManager.TryGetComponent<PlayerController>(out var playerController))
+                {
+                    playerController.IncreaseMiningRange(miningRangeIncreasePerStage);
                 }
             }
 

@@ -15,6 +15,10 @@ public sealed class EquipmentManager : MonoBehaviour
     private GameObject currentEquippedWeapon;
     private PlayerController playerController;
 
+    public bool IsDrillEquipped => currentEquippedWeapon != null && currentEquippedWeapon.name.Contains("Drill");
+    public bool IsDrill1Equipped => currentEquippedWeapon != null && currentEquippedWeapon.name.Contains("Drill 1");
+    public bool IsDrill2Equipped => currentEquippedWeapon != null && currentEquippedWeapon.name.Contains("Drill 2");
+
     private void Awake()
     {
         playerController = GetComponent<PlayerController>();

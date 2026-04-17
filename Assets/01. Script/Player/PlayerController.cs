@@ -13,10 +13,49 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private float movementSpeed = 5f;
     
     [Header("Mining Settings")]
-    [SerializeField] private Vector3 miningDetectionBoxSize = new Vector3(2f, 3f, 2f); // 감지 박스 크기
+    [SerializeField] private Vector3 baseMiningDetectionBoxSize = new Vector3(2f, 3f, 2f); // 기본 감지 박스 크기
     [SerializeField] private Vector3 miningDetectionOffset = new Vector3(0f, 0f, 0.5f); // 감지 오프셋
     [SerializeField] private LayerMask resourceLayer;  // 바위 레이어 설정
     
+    [Header("Drill 1 Mining Settings")]
+    [SerializeField] private Vector3 drill1DetectionBoxSize = new Vector3(3f, 3f, 3f);
+    [SerializeField] private Vector3 drill1DetectionOffset = new Vector3(0f, 0f, 1f);
+
+    [Header("Drill 2 Mining Settings")]
+    [SerializeField] private Vector3 drill2DetectionBoxSize = new Vector3(4f, 3f, 4f);
+    [SerializeField] private Vector3 drill2DetectionOffset = new Vector3(0f, 0f, 1.5f);
+
+    [Header("Drill General Settings")]
+    [SerializeField] private float drillHitDelay = 0.05f;  // 드릴 순차 타격 간격
+
+    private Vector3 miningDetectionBoxBonus = Vector3.zero; // 업그레이드 보너스
+    
+    private Vector3 CurrentMiningDetectionBoxSize
+    {
+        get
+        {
+            if (equipmentManager != null)
+            {
+                if (equipmentManager.IsDrill2Equipped) return drill2DetectionBoxSize + miningDetectionBoxBonus;
+                if (equipmentManager.IsDrill1Equipped) return drill1DetectionBoxSize + miningDetectionBoxBonus;
+            }
+            return baseMiningDetectionBoxSize + miningDetectionBoxBonus;
+        }
+    }
+
+    private Vector3 CurrentMiningOffset
+    {
+        get
+        {
+            if (equipmentManager != null)
+            {
+                if (equipmentManager.IsDrill2Equipped) return drill2DetectionOffset;
+                if (equipmentManager.IsDrill1Equipped) return drill1DetectionOffset;
+            }
+            return miningDetectionOffset;
+        }
+    }
+
     [SerializeField] private Animator animator;
 
     private Rigidbody rb;
@@ -26,6 +65,12 @@ public sealed class PlayerController : MonoBehaviour
     private bool isMiningState = false; // 중복 호출 방지용
     
     public bool IsInMiningZone { get; set; }
+
+    public void IncreaseMiningRange(Vector3 bonusSize)
+    {
+        miningDetectionBoxBonus += bonusSize;
+        Debug.Log($"[PlayerController] Mining range increased by {bonusSize}. Current: {CurrentMiningDetectionBoxSize}");
+    }
 
     public void SetMiningState(bool isMining)
     {
@@ -63,9 +108,8 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        // 전방 바위 감지 (CheckBox 활용)
-        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
-        bool isResourceNearby = Physics.CheckBox(detectPosition, miningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
+        Vector3 detectPosition = transform.position + transform.rotation * CurrentMiningOffset;
+        bool isResourceNearby = Physics.CheckBox(detectPosition, CurrentMiningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
         
         SetMiningState(isResourceNearby);
     }
@@ -133,17 +177,52 @@ public sealed class PlayerController : MonoBehaviour
     // 애니메이션 이벤트에서 호출될 메서드 
     public void OnMiningHit()
     {
-        Vector3 detectPosition = transform.position + transform.rotation * miningDetectionOffset;
-        Collider[] hitNodes = Physics.OverlapBox(detectPosition, miningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
+        if (equipmentManager != null && equipmentManager.IsDrillEquipped)
+        {
+            StartCoroutine(DrillMiningRoutine());
+        }
+        else
+        {
+            Vector3 detectPosition = transform.position + transform.rotation * CurrentMiningOffset;
+            Collider[] hitNodes = Physics.OverlapBox(detectPosition, CurrentMiningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
 
-        foreach (var hit in hitNodes)
+            foreach (var hit in hitNodes)
+            {
+                if (hit.TryGetComponent<ResourceNode>(out var node))
+                {
+                    node.TakeDamage(1, stackManager);
+                    break; // 곡괭이는 단일 타격 유지
+                }
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator DrillMiningRoutine()
+    {
+        Vector3 detectPosition = transform.position + transform.rotation * CurrentMiningOffset;
+        Collider[] hitColliders = Physics.OverlapBox(detectPosition, CurrentMiningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
+
+        var nodes = new System.Collections.Generic.List<ResourceNode>();
+        foreach (var hit in hitColliders)
         {
             if (hit.TryGetComponent<ResourceNode>(out var node))
             {
-                // 바위에게 데미지를 입힘
-                node.TakeDamage(1, stackManager); 
-                Debug.Log("바위 타격 성공!");
-                break; // 한 번에 하나의 바위만 캐도록 설정
+                nodes.Add(node);
+            }
+        }
+
+        // 거리순 정렬 (가까운 것부터 타격)
+        nodes.Sort((a, b) => 
+            (a.transform.position - transform.position).sqrMagnitude.CompareTo(
+            (b.transform.position - transform.position).sqrMagnitude));
+
+        // 지정된 간격으로 순차 타격
+        foreach (var node in nodes)
+        {
+            if (node != null && stackManager.IsFull == false) // 중간에 파괴되었거나 스택이 꽉 차면 중단
+            {
+                node.TakeDamage(1, stackManager);
+                yield return new WaitForSeconds(drillHitDelay);
             }
         }
     }
@@ -151,13 +230,19 @@ public sealed class PlayerController : MonoBehaviour
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
-        
-        // 플레이어의 위치와 회전을 기준으로 로컬 좌표계(Matrix)를 설정
         Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
-        
-        // 설정된 로컬 좌표계 내에서 Offset 위치에 지정된 크기의 큐브를 그림
-        Gizmos.DrawWireCube(miningDetectionOffset, miningDetectionBoxSize);
+
+        // Base mining range
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(miningDetectionOffset, baseMiningDetectionBoxSize + miningDetectionBoxBonus);
+
+        // Drill 1 mining range
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireCube(drill1DetectionOffset, drill1DetectionBoxSize + miningDetectionBoxBonus);
+
+        // Drill 2 mining range
+        Gizmos.color = new Color(0.6f, 0f, 0.8f, 1f); // Purple
+        Gizmos.DrawWireCube(drill2DetectionOffset, drill2DetectionBoxSize + miningDetectionBoxBonus);
     }
 #endif
 }
