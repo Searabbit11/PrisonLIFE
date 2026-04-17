@@ -118,7 +118,7 @@ public sealed class Criminal : MonoBehaviour
         animator.SetBool(IsWalking, true);
 
         transform.DOKill();
-        transform.DORotateQuaternion(targetPoint.rotation, 0.2f);
+        transform.DORotateQuaternion(targetPoint.rotation, rotationSpeed);
         transform.DOMove(targetPoint.position, duration)
             .SetEase(Ease.Linear)
             .OnComplete(() =>
@@ -162,7 +162,7 @@ public sealed class Criminal : MonoBehaviour
             {
                 float distance = Vector3.Distance(transform.position, path[0].position);
                 float duration = distance / moveSpeed;
-                transform.DOLookAt(path[0].position, 0.2f);
+                transform.DOLookAt(path[0].position, rotationSpeed);
                 yield return transform.DOMove(path[0].position, duration).SetEase(Ease.Linear).WaitForCompletion();
                 
                 // [연출 추가] 죄수가 입구에 도착했을 때 카메라가 감옥을 비춤
@@ -178,7 +178,7 @@ public sealed class Criminal : MonoBehaviour
             float distance = Vector3.Distance(transform.position, waypoint.position);
             float duration = distance / moveSpeed;
 
-            transform.DOLookAt(waypoint.position, 0.2f);
+            transform.DOLookAt(waypoint.position, rotationSpeed);
             yield return transform.DOMove(waypoint.position, duration)
                 .SetEase(Ease.Linear)
                 .WaitForCompletion();
@@ -188,7 +188,7 @@ public sealed class Criminal : MonoBehaviour
         float slotDistance = Vector3.Distance(transform.position, targetSlot.position);
         float slotDuration = slotDistance / moveSpeed;
 
-        transform.DOLookAt(targetSlot.position, 0.2f);
+        transform.DOLookAt(targetSlot.position, rotationSpeed);
         yield return transform.DOMove(targetSlot.position, slotDuration)
             .SetEase(Ease.Linear)
             .WaitForCompletion();

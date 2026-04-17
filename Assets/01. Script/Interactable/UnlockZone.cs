@@ -41,6 +41,9 @@ public sealed class UnlockZone : MonoBehaviour
     [SerializeField] private float jumpPower = 2f;
     public bool hideOnCompleteWithAnimation = false;
 
+    [Header("Upgrade Settings")]
+    [SerializeField] private int capacityIncreasePerStage = 10;
+
     public event Action<UnlockZone, int, UnlockStage> StageCompleted;
     public event Action<UnlockZone> AllStagesCompleted;
 
@@ -230,6 +233,11 @@ public sealed class UnlockZone : MonoBehaviour
             if (equipmentManager != null)
             {
                 equipmentManager.EquipWeapon(stage.targetObject);
+
+                if (equipmentManager.TryGetComponent<StackManager>(out var playerStack))
+                {
+                    playerStack.IncreaseMaxCapacity(capacityIncreasePerStage);
+                }
             }
 
             return;

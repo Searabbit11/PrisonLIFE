@@ -5,8 +5,8 @@ using UnityEngine;
 
 public sealed class StackManager : MonoBehaviour
 {
-    private const int MaxStackCount = 10;
-    [Header("Ore Stack Settings")]
+    [Header("Stack Settings")]
+    [SerializeField] private int maxStackCount = 10;
     [SerializeField] private float yOffset = 0.18f;
     [SerializeField] private Transform stackPivot;
     private const float FollowSpeed = 15f;
@@ -25,13 +25,19 @@ public sealed class StackManager : MonoBehaviour
     [Header("UI Settings")]
     [SerializeField] private FloatingText floatingText;
 
-    public bool IsFull => stackedItems.Count >= MaxStackCount;
-    public int MaxCarryCount => MaxStackCount;
+    public bool IsFull => stackedItems.Count >= maxStackCount;
+    public int MaxCarryCount => maxStackCount;
     public int OreCount => stackedItems.Count;
     public bool HasHandcuffs => handcuffItems.Count > 0;
     public int HandcuffCount => handcuffItems.Count;
     public bool HasCash => cashStack.Count > 0;
     public int CashCount => cashStack.Count;
+
+    public void IncreaseMaxCapacity(int amount)
+    {
+        maxStackCount += amount;
+        Debug.Log($"[StackManager] Max Capacity increased to: {maxStackCount}");
+    }
 
     private void Start()
     {
