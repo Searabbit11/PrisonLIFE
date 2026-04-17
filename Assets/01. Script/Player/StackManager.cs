@@ -121,6 +121,8 @@ public sealed class StackManager : MonoBehaviour
     {
         UpdateCarrySway();
         UpdateStackMovement();
+        UpdateHandcuffStackMovement();
+        UpdateCashStackMovement();
     }
 
     public void ShowMaxEffect()
@@ -158,6 +160,58 @@ public sealed class StackManager : MonoBehaviour
             current.rotation = Quaternion.Lerp(current.rotation, target.rotation, Time.deltaTime * FollowSpeed);
         }
     }
+
+    private void UpdateHandcuffStackMovement()
+    {
+        UpdateDynamicStackMovement(handcuffItems, handcuffStackPivot, handcuffYOffset, false);
+    }
+
+    private void UpdateCashStackMovement()
+    {
+        UpdateDynamicStackMovement(cashStack, cashStackPivot, cashYOffset, false);
+    }
+
+    private void UpdateDynamicStackMovement(List<GameObject> items, Transform rootPivot, float itemYOffset, bool applyCurve)
+    {
+        if (rootPivot == null || items.Count == 0) return;
+
+        int itemCount = items.Count;
+        float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
+        float speedRatio = Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
+        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : Vector3.zero;
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            GameObject currentObject = items[i];
+            if (currentObject == null) continue;
+
+            Transform current = currentObject.transform;
+            Transform target = rootPivot;
+
+            if (i > 0)
+            {
+                GameObject previousObject = items[i - 1];
+                if (previousObject != null)
+                {
+                    target = previousObject.transform;
+                }
+            }
+
+            Vector3 targetPos = target.position + Vector3.up * itemYOffset;
+
+            if (applyCurve && itemCount > 2)
+            {
+                float t = i / (float)(itemCount - 1);
+                float centerProfile = 4f * t * (1f - t);
+                Vector3 curveOffset = backDir * (curveBackMaxOffset * speedRatio * centerProfile);
+                targetPos += curveOffset;
+            }
+
+            current.position = Vector3.Lerp(current.position, targetPos, Time.deltaTime * FollowSpeed);
+            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, Time.deltaTime * FollowSpeed);
+        }
+    }
+
     public GameObject PopItem()
     {
         if (stackedItems.Count == 0) return null;
