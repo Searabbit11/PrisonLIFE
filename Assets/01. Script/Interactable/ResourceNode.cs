@@ -4,6 +4,8 @@ using UnityEngine;
 
 public sealed class ResourceNode : MonoBehaviour
 {
+    private static readonly Vector3 PunchAmount = Vector3.one * 0.1f;
+
     [Header("Health Settings")]
     [SerializeField] private int maxHp = 3;
     [SerializeField] private float respawnTime = 5f;
@@ -66,7 +68,7 @@ public sealed class ResourceNode : MonoBehaviour
 
         if (visualModel != null)
         {
-            visualModel.transform.DOPunchScale(Vector3.one * 0.1f, 0.2f);
+            visualModel.transform.DOPunchScale(PunchAmount, 0.2f);
         }
     }
 

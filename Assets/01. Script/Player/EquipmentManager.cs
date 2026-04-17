@@ -138,26 +138,28 @@ public sealed class EquipmentManager : MonoBehaviour
         out Vector3 targetRot,
         out EquippedType type)
     {
-        targetSocket = weaponSocket;
-        targetPos = defaultPickaxePos;
-        targetRot = defaultPickaxeRot;
-        type = EquippedType.Pickaxe;
+        string prefabName = weaponPrefab.name;
 
-        if (weaponPrefab.name.Contains("Drill 1"))
+        if (prefabName.Contains("Drill 1"))
         {
             targetSocket = drill1Socket != null ? drill1Socket : weaponSocket;
             targetPos = defaultDrill1Pos;
             targetRot = defaultDrill1Rot;
             type = EquippedType.Drill1;
-            return;
         }
-
-        if (weaponPrefab.name.Contains("Drill 2"))
+        else if (prefabName.Contains("Drill 2"))
         {
             targetSocket = drill2Socket != null ? drill2Socket : weaponSocket;
             targetPos = defaultDrill2Pos;
             targetRot = defaultDrill2Rot;
             type = EquippedType.Drill2;
+        }
+        else
+        {
+            targetSocket = weaponSocket;
+            targetPos = defaultPickaxePos;
+            targetRot = defaultPickaxeRot;
+            type = EquippedType.Pickaxe;
         }
     }
 }

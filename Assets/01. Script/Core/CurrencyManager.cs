@@ -18,14 +18,15 @@ public sealed class CurrencyManager : MonoBehaviour
 
     private int currentCash = 0;
     private bool hasTutorialPlayed = false; // 튜토리얼 중복 실행 방지
+    private Camera mainCam;
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
         else { Destroy(gameObject); return; }
 
-        // Clear any stale camera tween before the tutorial sequence starts.
-        if (Camera.main != null) Camera.main.transform.DOKill();
+        mainCam = Camera.main;
+        if (mainCam != null) mainCam.transform.DOKill();
     }
 
     private void Start()
@@ -51,53 +52,47 @@ public sealed class CurrencyManager : MonoBehaviour
 
     private IEnumerator ShowTutorialSequence()
     {
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null)
+        if (mainCam == null)
         {
             Debug.LogWarning("[CurrencyManager] Main Camera was not found. Skipping tutorial camera sequence.");
-            firstUnlockZone.SetActive(true);
+            if (firstUnlockZone != null) firstUnlockZone.SetActive(true);
             yield break;
         }
 
-        // The normal follow controller writes the camera position in LateUpdate.
-        // Disable it while DOTween owns the tutorial camera move.
         bool wasPlayerMovementEnabled = playerMovement != null && playerMovement.enabled;
         if (playerMovement != null) playerMovement.enabled = false;
 
         if (cameraFollowController == null)
         {
-            cameraFollowController = mainCamera.GetComponent<CameraController>();
+            cameraFollowController = mainCam.GetComponent<CameraController>();
         }
 
         bool wasCameraFollowEnabled = cameraFollowController != null && cameraFollowController.enabled;
         if (cameraFollowController != null) cameraFollowController.enabled = false;
 
-        Transform camTransform = mainCamera.transform;
+        Transform camTransform = mainCam.transform;
         Vector3 originalPos = camTransform.position;
         Vector3 targetCameraPosition = cameraFollowController != null
             ? cameraFollowController.GetCameraPositionForTarget(cameraTargetPoint.position)
             : cameraTargetPoint.position;
 
         camTransform.DOKill();
-        Sequence moveToZone = DOTween.Sequence();
-        moveToZone.Join(camTransform.DOMove(targetCameraPosition, 1f).SetEase(Ease.InOutSine));
-        yield return moveToZone.WaitForCompletion();
+        yield return camTransform.DOMove(targetCameraPosition, 1f).SetEase(Ease.InOutSine).WaitForCompletion();
 
-        firstUnlockZone.SetActive(true);
-        firstUnlockZone.transform.localScale = Vector3.zero;
-        firstUnlockZone.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+        if (firstUnlockZone != null)
+        {
+            firstUnlockZone.SetActive(true);
+            firstUnlockZone.transform.localScale = Vector3.zero;
+            firstUnlockZone.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
+        }
 
         yield return new WaitForSeconds(1.5f);
 
         camTransform.DOKill();
-        Sequence moveBack = DOTween.Sequence();
-        moveBack.Join(camTransform.DOMove(originalPos, 1f).SetEase(Ease.InOutSine));
-        yield return moveBack.WaitForCompletion();
+        yield return camTransform.DOMove(originalPos, 1f).SetEase(Ease.InOutSine).WaitForCompletion();
 
         if (cameraFollowController != null) cameraFollowController.enabled = wasCameraFollowEnabled;
         if (playerMovement != null) playerMovement.enabled = wasPlayerMovementEnabled;
-        
-        Debug.Log("[CurrencyManager] Tutorial Sequence Finished.");
     }
 
     public void SpendCash(int amount)

@@ -36,6 +36,7 @@ public sealed class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private StackManager stackManager;
     private EquipmentManager equipmentManager;
+    private Camera mainCam;
     private Vector3 moveDirection = Vector3.zero;
     private bool isMiningState;
 
@@ -49,13 +50,13 @@ public sealed class PlayerController : MonoBehaviour
     {
         get
         {
+            Vector3 baseSize = baseMiningDetectionBoxSize;
             if (equipmentManager != null)
             {
-                if (equipmentManager.IsDrill2Equipped) return drill2DetectionBoxSize + miningDetectionBoxBonus;
-                if (equipmentManager.IsDrill1Equipped) return drill1DetectionBoxSize + miningDetectionBoxBonus;
+                if (equipmentManager.IsDrill2Equipped) baseSize = drill2DetectionBoxSize;
+                else if (equipmentManager.IsDrill1Equipped) baseSize = drill1DetectionBoxSize;
             }
-
-            return baseMiningDetectionBoxSize + miningDetectionBoxBonus;
+            return baseSize + miningDetectionBoxBonus;
         }
     }
 
@@ -68,7 +69,6 @@ public sealed class PlayerController : MonoBehaviour
                 if (equipmentManager.IsDrill2Equipped) return drill2DetectionOffset;
                 if (equipmentManager.IsDrill1Equipped) return drill1DetectionOffset;
             }
-
             return miningDetectionOffset;
         }
     }
@@ -79,6 +79,7 @@ public sealed class PlayerController : MonoBehaviour
         rb.isKinematic = true;
         stackManager = GetComponent<StackManager>();
         equipmentManager = GetComponent<EquipmentManager>();
+        mainCam = Camera.main;
         drillHitWait = new WaitForSeconds(drillHitDelay);
     }
 
@@ -100,7 +101,6 @@ public sealed class PlayerController : MonoBehaviour
     public void IncreaseMiningRange(Vector3 bonusSize)
     {
         miningDetectionBoxBonus += bonusSize;
-        Debug.Log($"[PlayerController] Mining range increased by {bonusSize}. Current: {CurrentMiningDetectionBoxSize}");
     }
 
     public void SetMiningState(bool isMining)
@@ -113,14 +113,14 @@ public sealed class PlayerController : MonoBehaviour
 
     private void HandleMiningAnimation()
     {
-        if (IsInMiningZone == false)
+        if (!IsInMiningZone)
         {
             SetMiningState(false);
             return;
         }
 
-        Vector3 detectPosition = transform.position + transform.rotation * CurrentMiningOffset;
-        bool isResourceNearby = Physics.CheckBox(detectPosition, CurrentMiningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
+        Vector3 detectPosition = transform.position + (transform.rotation * CurrentMiningOffset);
+        bool isResourceNearby = Physics.CheckBox(detectPosition, CurrentMiningDetectionBoxSize * 0.5f, transform.rotation, resourceLayer);
         SetMiningState(isResourceNearby);
     }
 
@@ -133,20 +133,14 @@ public sealed class PlayerController : MonoBehaviour
             return;
         }
 
-        if (joystick == null || joystick.Direction == Vector2.zero)
+        if (joystick == null || joystick.Direction.sqrMagnitude < 0.0025f) // 0.05 * 0.05
         {
             moveDirection = Vector3.zero;
             return;
         }
 
         Vector2 input = joystick.Direction;
-        if (input.sqrMagnitude < 0.05f * 0.05f)
-        {
-            moveDirection = Vector3.zero;
-            return;
-        }
-
-        float cameraYaw = Camera.main != null ? Camera.main.transform.eulerAngles.y : 0f;
+        float cameraYaw = mainCam != null ? mainCam.transform.eulerAngles.y : 0f;
         float inputAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg;
         float snappedAngle = Mathf.Round(inputAngle / SnappingAngle) * SnappingAngle;
 

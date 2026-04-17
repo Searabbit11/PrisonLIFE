@@ -137,16 +137,20 @@ public sealed class StackManager : MonoBehaviour
     private void UpdateStackMovement()
     {
         int stackCount = stackedItems.Count;
+        if (stackCount == 0) return;
+
         float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
         float speedRatio = Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
         Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : Vector3.zero;
 
-        for (int i = 0; i < stackedItems.Count; i++)
+        float lerpAmount = Time.deltaTime * FollowSpeed;
+
+        for (int i = 0; i < stackCount; i++)
         {
             Transform current = stackedItems[i];
             Transform target = (i == 0) ? stackPivot : stackedItems[i - 1];
 
-            Vector3 targetPos = target.position + Vector3.up * yOffset;
+            Vector3 targetPos = target.position + (Vector3.up * yOffset);
 
             if (stackCount > 2)
             {
@@ -156,8 +160,8 @@ public sealed class StackManager : MonoBehaviour
                 targetPos += curveOffset;
             }
 
-            current.position = Vector3.Lerp(current.position, targetPos, Time.deltaTime * FollowSpeed);
-            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, Time.deltaTime * FollowSpeed);
+            current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
+            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, lerpAmount);
         }
     }
 
@@ -173,12 +177,14 @@ public sealed class StackManager : MonoBehaviour
 
     private void UpdateDynamicStackMovement(List<GameObject> items, Transform rootPivot, float itemYOffset, bool applyCurve)
     {
-        if (rootPivot == null || items.Count == 0) return;
-
         int itemCount = items.Count;
+        if (rootPivot == null || itemCount == 0) return;
+
         float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
         float speedRatio = Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
         Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : Vector3.zero;
+
+        float lerpAmount = Time.deltaTime * FollowSpeed;
 
         for (int i = 0; i < itemCount; i++)
         {
@@ -186,18 +192,9 @@ public sealed class StackManager : MonoBehaviour
             if (currentObject == null) continue;
 
             Transform current = currentObject.transform;
-            Transform target = rootPivot;
+            Transform target = (i == 0) ? rootPivot : items[i - 1].transform;
 
-            if (i > 0)
-            {
-                GameObject previousObject = items[i - 1];
-                if (previousObject != null)
-                {
-                    target = previousObject.transform;
-                }
-            }
-
-            Vector3 targetPos = target.position + Vector3.up * itemYOffset;
+            Vector3 targetPos = target.position + (Vector3.up * itemYOffset);
 
             if (applyCurve && itemCount > 2)
             {
@@ -207,8 +204,8 @@ public sealed class StackManager : MonoBehaviour
                 targetPos += curveOffset;
             }
 
-            current.position = Vector3.Lerp(current.position, targetPos, Time.deltaTime * FollowSpeed);
-            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, Time.deltaTime * FollowSpeed);
+            current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
+            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, lerpAmount);
         }
     }
 
