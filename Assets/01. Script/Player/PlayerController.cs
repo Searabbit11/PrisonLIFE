@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -5,19 +6,19 @@ public sealed class PlayerController : MonoBehaviour
 {
     private static readonly int Speed = Animator.StringToHash("Speed");
     private static readonly int IsMining = Animator.StringToHash("IsMining");
-    private static readonly int IsDrill = Animator.StringToHash("IsDrill"); // [추가] 드릴 애니메이션 파라미터 (애니메이터 컨트롤러 세팅 필요)
+    private static readonly int IsDrill = Animator.StringToHash("IsDrill");
     private const float RotationSpeed = 15f;
     private const float SnappingAngle = 45f;
-    private const float MinInputMagnitude = 0.1f;
+    private const int MaxMiningHits = 32;
 
     [SerializeField] private FloatingJoystick joystick;
     [SerializeField] private float movementSpeed = 5f;
-    
+
     [Header("Mining Settings")]
-    [SerializeField] private Vector3 baseMiningDetectionBoxSize = new Vector3(2f, 3f, 2f); // 기본 감지 박스 크기
-    [SerializeField] private Vector3 miningDetectionOffset = new Vector3(0f, 0f, 0.5f); // 감지 오프셋
-    [SerializeField] private LayerMask resourceLayer;  // 바위 레이어 설정
-    
+    [SerializeField] private Vector3 baseMiningDetectionBoxSize = new Vector3(2f, 3f, 2f);
+    [SerializeField] private Vector3 miningDetectionOffset = new Vector3(0f, 0f, 0.5f);
+    [SerializeField] private LayerMask resourceLayer;
+
     [Header("Drill 1 Mining Settings")]
     [SerializeField] private Vector3 drill1DetectionBoxSize = new Vector3(3f, 3f, 3f);
     [SerializeField] private Vector3 drill1DetectionOffset = new Vector3(0f, 0f, 1f);
@@ -27,10 +28,23 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private Vector3 drill2DetectionOffset = new Vector3(0f, 0f, 1.5f);
 
     [Header("Drill General Settings")]
-    [SerializeField] private float drillHitDelay = 0.05f;  // 드릴 순차 타격 간격
+    [SerializeField] private float drillHitDelay = 0.05f;
 
-    private Vector3 miningDetectionBoxBonus = Vector3.zero; // 업그레이드 보너스
-    
+    [SerializeField] private Animator animator;
+
+    private Vector3 miningDetectionBoxBonus = Vector3.zero;
+    private Rigidbody rb;
+    private StackManager stackManager;
+    private EquipmentManager equipmentManager;
+    private Vector3 moveDirection = Vector3.zero;
+    private bool isMiningState;
+
+    private readonly Collider[] miningHitBuffer = new Collider[MaxMiningHits];
+    private readonly ResourceNode[] miningNodeBuffer = new ResourceNode[MaxMiningHits];
+    private WaitForSeconds drillHitWait;
+
+    public bool IsInMiningZone { get; set; }
+
     private Vector3 CurrentMiningDetectionBoxSize
     {
         get
@@ -40,6 +54,7 @@ public sealed class PlayerController : MonoBehaviour
                 if (equipmentManager.IsDrill2Equipped) return drill2DetectionBoxSize + miningDetectionBoxBonus;
                 if (equipmentManager.IsDrill1Equipped) return drill1DetectionBoxSize + miningDetectionBoxBonus;
             }
+
             return baseMiningDetectionBoxSize + miningDetectionBoxBonus;
         }
     }
@@ -53,19 +68,34 @@ public sealed class PlayerController : MonoBehaviour
                 if (equipmentManager.IsDrill2Equipped) return drill2DetectionOffset;
                 if (equipmentManager.IsDrill1Equipped) return drill1DetectionOffset;
             }
+
             return miningDetectionOffset;
         }
     }
 
-    [SerializeField] private Animator animator;
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.isKinematic = true;
+        stackManager = GetComponent<StackManager>();
+        equipmentManager = GetComponent<EquipmentManager>();
+        drillHitWait = new WaitForSeconds(drillHitDelay);
+    }
 
-    private Rigidbody rb;
-    private StackManager stackManager;
-    private EquipmentManager equipmentManager;
-    private Vector3 moveDirection = Vector3.zero;
-    private bool isMiningState = false; // 중복 호출 방지용
-    
-    public bool IsInMiningZone { get; set; }
+    private void OnValidate()
+    {
+        if (drillHitDelay < 0f) drillHitDelay = 0f;
+        if (Application.isPlaying) drillHitWait = new WaitForSeconds(drillHitDelay);
+    }
+
+    private void Update()
+    {
+        HandleInput();
+        HandleRotation();
+        HandleMovement();
+        UpdateAnimation();
+        HandleMiningAnimation();
+    }
 
     public void IncreaseMiningRange(Vector3 bonusSize)
     {
@@ -81,26 +111,6 @@ public sealed class PlayerController : MonoBehaviour
         animator.SetBool(IsMining, isMining);
     }
 
-    private void Awake()
-    {
-        rb = GetComponent<Rigidbody>();
-        rb.isKinematic = true; // 물리 연산 배제, 트랜스폼 및 트리거 전용 상태로 설정
-        stackManager = GetComponent<StackManager>();
-        equipmentManager = GetComponent<EquipmentManager>();
-    }
-
-    private void Update()
-    {
-        HandleInput();
-        HandleRotation();
-        HandleMovement(); // Update에서 즉각적으로 이동 처리 (반응성 향상)
-        UpdateAnimation();
-        HandleMiningAnimation();
-    }
-
-    /// <summary>
-    /// 구역 내에서 바위 감지 및 애니메이션 제어
-    /// </summary>
     private void HandleMiningAnimation()
     {
         if (IsInMiningZone == false)
@@ -111,49 +121,41 @@ public sealed class PlayerController : MonoBehaviour
 
         Vector3 detectPosition = transform.position + transform.rotation * CurrentMiningOffset;
         bool isResourceNearby = Physics.CheckBox(detectPosition, CurrentMiningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
-        
         SetMiningState(isResourceNearby);
     }
 
     private void HandleInput()
     {
-        if (CameraController.Instance != null && CameraController.Instance.IsFocusing == true)
+        if (CameraController.Instance != null && CameraController.Instance.IsFocusing)
         {
             moveDirection = Vector3.zero;
             SetMiningState(false);
             return;
         }
 
-        if (joystick == null || joystick.Direction == Vector2.zero) 
+        if (joystick == null || joystick.Direction == Vector2.zero)
         {
             moveDirection = Vector3.zero;
             return;
         }
 
         Vector2 input = joystick.Direction;
-
-        if (input.sqrMagnitude < 0.05f * 0.05f) 
+        if (input.sqrMagnitude < 0.05f * 0.05f)
         {
             moveDirection = Vector3.zero;
             return;
         }
 
-        // 카메라의 Yaw(Y축 회전) 값 가져오기
         float cameraYaw = Camera.main != null ? Camera.main.transform.eulerAngles.y : 0f;
-
-        // 8방향 이동을 위한 입력 스냅 (45도 단위)
         float inputAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg;
         float snappedAngle = Mathf.Round(inputAngle / SnappingAngle) * SnappingAngle;
-        
-        // 카메라 회전값을 더해 최종 이동 방향 결정
-        moveDirection = Quaternion.Euler(0, snappedAngle + cameraYaw, 0) * Vector3.forward;
+
+        moveDirection = Quaternion.Euler(0f, snappedAngle + cameraYaw, 0f) * Vector3.forward;
     }
 
     private void HandleMovement()
     {
         if (moveDirection == Vector3.zero) return;
-
-        // 조이스틱 강도 반영 제거, 고정 속도 이동
         transform.position += moveDirection * (movementSpeed * Time.deltaTime);
     }
 
@@ -167,71 +169,122 @@ public sealed class PlayerController : MonoBehaviour
 
     private void UpdateAnimation()
     {
-        if (animator != null)
-        {
-            // 이동 여부에 따라 애니메이션 속도 파라미터를 0 또는 1로 고정
-            float targetSpeed = moveDirection == Vector3.zero ? 0f : 1f;
-            animator.SetFloat(Speed, targetSpeed);
+        if (animator == null) return;
 
-            // 매 프레임 장비 상태를 애니메이터에 동기화하여 지연 발생 방지
-            if (equipmentManager != null)
-            {
-                animator.SetBool(IsDrill, equipmentManager.IsDrillEquipped);
-            }
+        animator.SetFloat(Speed, moveDirection == Vector3.zero ? 0f : 1f);
+        if (equipmentManager != null)
+        {
+            animator.SetBool(IsDrill, equipmentManager.IsDrillEquipped);
         }
     }
 
-    // 애니메이션 이벤트에서 호출될 메서드 
     public void OnMiningHit()
     {
         if (equipmentManager != null && equipmentManager.IsDrillEquipped)
         {
             StartCoroutine(DrillMiningRoutine());
+            return;
         }
-        else
-        {
-            Vector3 detectPosition = transform.position + transform.rotation * CurrentMiningOffset;
-            Collider[] hitNodes = Physics.OverlapBox(detectPosition, CurrentMiningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
 
-            foreach (var hit in hitNodes)
+        int nodeCount = CollectMiningNodesNonAlloc();
+        if (nodeCount == 0) return;
+
+        int nearestIndex = 0;
+        float nearestDist = float.MaxValue;
+        Vector3 origin = transform.position;
+
+        for (int i = 0; i < nodeCount; i++)
+        {
+            ResourceNode node = miningNodeBuffer[i];
+            if (node == null) continue;
+
+            float dist = (node.transform.position - origin).sqrMagnitude;
+            if (dist < nearestDist)
             {
-                if (hit.TryGetComponent<ResourceNode>(out var node))
-                {
-                    node.TakeDamage(1, stackManager);
-                    break; // 곡괭이는 단일 타격 유지
-                }
+                nearestDist = dist;
+                nearestIndex = i;
             }
+        }
+
+        ResourceNode nearestNode = miningNodeBuffer[nearestIndex];
+        if (nearestNode != null)
+        {
+            nearestNode.TakeDamage(1, stackManager);
         }
     }
 
-    private System.Collections.IEnumerator DrillMiningRoutine()
+    private IEnumerator DrillMiningRoutine()
+    {
+        int nodeCount = CollectMiningNodesNonAlloc();
+        if (nodeCount == 0) yield break;
+
+        Vector3 origin = transform.position;
+
+        // Insertion sort by distance to avoid per-call List allocations.
+        for (int i = 1; i < nodeCount; i++)
+        {
+            ResourceNode key = miningNodeBuffer[i];
+            if (key == null) continue;
+
+            float keyDist = (key.transform.position - origin).sqrMagnitude;
+            int j = i - 1;
+            while (j >= 0)
+            {
+                ResourceNode prev = miningNodeBuffer[j];
+                if (prev == null)
+                {
+                    j--;
+                    continue;
+                }
+
+                float prevDist = (prev.transform.position - origin).sqrMagnitude;
+                if (prevDist <= keyDist) break;
+
+                miningNodeBuffer[j + 1] = prev;
+                j--;
+            }
+
+            miningNodeBuffer[j + 1] = key;
+        }
+
+        for (int i = 0; i < nodeCount; i++)
+        {
+            ResourceNode node = miningNodeBuffer[i];
+            if (node == null) continue;
+
+            node.TakeDamage(1, stackManager);
+            yield return drillHitWait;
+        }
+    }
+
+    private int CollectMiningNodesNonAlloc()
     {
         Vector3 detectPosition = transform.position + transform.rotation * CurrentMiningOffset;
-        Collider[] hitColliders = Physics.OverlapBox(detectPosition, CurrentMiningDetectionBoxSize / 2f, transform.rotation, resourceLayer);
+        int hitCount = Physics.OverlapBoxNonAlloc(
+            detectPosition,
+            CurrentMiningDetectionBoxSize / 2f,
+            miningHitBuffer,
+            transform.rotation,
+            resourceLayer);
 
-        var nodes = new System.Collections.Generic.List<ResourceNode>();
-        foreach (var hit in hitColliders)
+        int nodeCount = 0;
+        for (int i = 0; i < hitCount; i++)
         {
-            if (hit.TryGetComponent<ResourceNode>(out var node))
+            Collider hit = miningHitBuffer[i];
+            if (hit != null && hit.TryGetComponent<ResourceNode>(out var node) && nodeCount < miningNodeBuffer.Length)
             {
-                nodes.Add(node);
+                miningNodeBuffer[nodeCount++] = node;
             }
+
+            miningHitBuffer[i] = null;
         }
 
-        // 거리순 정렬 (가까운 것부터 타격)
-        nodes.Sort((a, b) => 
-            (a.transform.position - transform.position).sqrMagnitude.CompareTo(
-            (b.transform.position - transform.position).sqrMagnitude));
-
-        // 지정된 간격으로 순차 타격
-        foreach (var node in nodes)
+        for (int i = nodeCount; i < miningNodeBuffer.Length; i++)
         {
-            if (node != null) // 중간에 파괴되었으면 무시, 스택이 꽉 차도 채굴은 진행
-            {
-                node.TakeDamage(1, stackManager);
-                yield return new WaitForSeconds(drillHitDelay);
-            }
+            miningNodeBuffer[i] = null;
         }
+
+        return nodeCount;
     }
 
 #if UNITY_EDITOR
@@ -239,16 +292,13 @@ public sealed class PlayerController : MonoBehaviour
     {
         Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
 
-        // Base mining range
         Gizmos.color = Color.red;
         Gizmos.DrawWireCube(miningDetectionOffset, baseMiningDetectionBoxSize + miningDetectionBoxBonus);
 
-        // Drill 1 mining range
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube(drill1DetectionOffset, drill1DetectionBoxSize + miningDetectionBoxBonus);
 
-        // Drill 2 mining range
-        Gizmos.color = new Color(0.6f, 0f, 0.8f, 1f); // Purple
+        Gizmos.color = new Color(0.6f, 0f, 0.8f, 1f);
         Gizmos.DrawWireCube(drill2DetectionOffset, drill2DetectionBoxSize + miningDetectionBoxBonus);
     }
 #endif

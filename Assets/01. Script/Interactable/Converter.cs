@@ -58,7 +58,11 @@ public sealed class Converter : MonoBehaviour
     private void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         cachedCamera = Camera.main;
     }
@@ -72,7 +76,6 @@ public sealed class Converter : MonoBehaviour
     {
         if (Time.time < nextReceiveTime) return;
 
-        // 입구 광석 적재 한도 체크
         if (rawOresOnFloor.Count >= maxRawOreCapacity)
         {
             if (inputFloatingText != null) inputFloatingText.Show("MAX");
@@ -96,11 +99,11 @@ public sealed class Converter : MonoBehaviour
     public void ReceiveNpcOre(GameObject ore)
     {
         if (ore == null) return;
-        
-        // NPC 입력도 한도 체크
+
         if (rawOresOnFloor.Count >= maxRawOreCapacity)
         {
             if (inputFloatingText != null) inputFloatingText.Show("MAX");
+            DiscardOre(ore);
             return;
         }
 
@@ -123,6 +126,22 @@ public sealed class Converter : MonoBehaviour
 
         handcuff.transform.DOLocalJump(localTargetPos, jumpPower, 1, jumpDuration).SetEase(Ease.OutQuad);
         handcuff.transform.DOLocalRotate(Vector3.zero, jumpDuration);
+    }
+
+    private void DiscardOre(GameObject ore)
+    {
+        if (ore == null) return;
+
+        ore.transform.DOKill();
+        rawOresInTransit.Remove(ore);
+
+        if (PoolManager.Instance != null)
+        {
+            PoolManager.Instance.ReturnToPool("Ore", ore);
+            return;
+        }
+
+        Destroy(ore);
     }
 
     private void ReceiveOreToFloor(GameObject ore)
@@ -168,7 +187,6 @@ public sealed class Converter : MonoBehaviour
 
     private void ProcessRawOresAutomatically()
     {
-        // 출력물 적재 공간이 꽉 찼으면 프로세스 중단
         if (producedHandcuffs.Count >= maxHandcuffCapacity)
         {
             if (outputFloatingText != null) outputFloatingText.Show("MAX");
@@ -176,8 +194,6 @@ public sealed class Converter : MonoBehaviour
         }
 
         if (Time.time < nextProcessTime || rawOresOnFloor.Count == 0) return;
-        
-        // ... (이하 동일)
 
         int lastIndex = rawOresOnFloor.Count - 1;
         GameObject oreToProcess = rawOresOnFloor[lastIndex];
@@ -201,7 +217,6 @@ public sealed class Converter : MonoBehaviour
         seq.Append(oreToProcess.transform.DOJump(meltPoint.position, jumpPower, 1, absorbMoveDuration).SetEase(Ease.OutQuad));
         seq.AppendCallback(() =>
         {
-            // Destroy 대신 풀로 반환
             PoolManager.Instance.ReturnToPool("Ore", oreToProcess);
             SpawnAndProcessIngot();
         });
@@ -209,7 +224,6 @@ public sealed class Converter : MonoBehaviour
 
     private void SpawnAndProcessIngot()
     {
-        // PoolManager에서 은괴를 가져옵니다.
         GameObject ingot = PoolManager.Instance.SpawnFromPool("Ingot", beltStartPoint.position, Quaternion.Euler(ingotSpawnRotation));
         if (ingot == null) return;
 
@@ -231,10 +245,8 @@ public sealed class Converter : MonoBehaviour
                         cachedCamera.transform.DOShakePosition(0.1f, 0.1f);
                     }
 
-                    // 은괴 반환
                     PoolManager.Instance.ReturnToPool("Ingot", ingot);
 
-                    // 수갑 생성 (풀에서 가져오기)
                     GameObject handcuff = PoolManager.Instance.SpawnFromPool("Handcuff", pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
                     if (handcuff != null)
                     {
@@ -245,7 +257,6 @@ public sealed class Converter : MonoBehaviour
                 return;
             }
 
-            // 은괴 반환 및 수갑 생성
             PoolManager.Instance.ReturnToPool("Ingot", ingot);
             GameObject handcuffAlt = PoolManager.Instance.SpawnFromPool("Handcuff", pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
             if (handcuffAlt != null)

@@ -24,13 +24,26 @@ public sealed class DeskNPC : MonoBehaviour
     private bool hasIsWalkingFloat;
     private bool hasSpeedFloat;
     private RuntimeAnimatorController cachedController;
+    private WaitForSeconds handcuffCheckWait;
+    private WaitForSeconds interactWait;
 
     private void Awake()
     {
         stackManager = GetComponent<StackManager>();
         CacheAnimatorParams();
+        handcuffCheckWait = new WaitForSeconds(0.5f);
+        interactWait = new WaitForSeconds(interactDelay);
         // NPC
         stackManager.IncreaseMaxCapacity(10 - stackManager.MaxCarryCount); 
+    }
+
+    private void OnValidate()
+    {
+        if (interactDelay < 0f) interactDelay = 0f;
+        if (Application.isPlaying)
+        {
+            interactWait = new WaitForSeconds(interactDelay);
+        }
     }
 
     private void Start()
@@ -63,7 +76,7 @@ public sealed class DeskNPC : MonoBehaviour
         
         while (Converter.Instance == null || Converter.Instance.HasProducedHandcuffs() == false)
         {
-            yield return new WaitForSeconds(0.5f);
+            yield return handcuffCheckWait;
         }
     }
 
@@ -176,7 +189,7 @@ public sealed class DeskNPC : MonoBehaviour
                 timer = 0f; 
             }
             
-            yield return new WaitForSeconds(interactDelay);
+            yield return interactWait;
         }
     }
 
@@ -188,7 +201,7 @@ public sealed class DeskNPC : MonoBehaviour
             {
                 deliveryDesk.ProcessNpcHandcuff(stackManager);
             }
-            yield return new WaitForSeconds(interactDelay);
+            yield return interactWait;
         }
     }
 }

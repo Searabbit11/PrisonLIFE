@@ -33,6 +33,18 @@ public sealed class DeliveryDesk : MonoBehaviour
     private Coroutine collectCoroutine;
     private float nextDeliveryTime;
     private int totalSpawnedCashCount = 0; 
+    private WaitForSeconds collectWait;
+
+    private void Awake()
+    {
+        collectWait = new WaitForSeconds(collectInterval);
+    }
+
+    private void OnValidate()
+    {
+        if (collectInterval < 0f) collectInterval = 0f;
+        if (Application.isPlaying) collectWait = new WaitForSeconds(collectInterval);
+    }
 
     public void CollectCash(GameObject player)
     {
@@ -87,7 +99,7 @@ public sealed class DeliveryDesk : MonoBehaviour
                 if (deskHandcuffs.Count >= maxHandcuffCapacity)
                 {
                     if (floatingText != null) floatingText.Show("MAX");
-                    yield return new WaitForSeconds(collectInterval);
+                    yield return collectWait;
                     continue;
                 }
 
@@ -104,7 +116,7 @@ public sealed class DeliveryDesk : MonoBehaviour
                     handcuff.transform.DOLocalRotate(Vector3.zero, jumpDuration);
                 }
             }
-            yield return new WaitForSeconds(collectInterval);
+            yield return collectWait;
         }
     }
 

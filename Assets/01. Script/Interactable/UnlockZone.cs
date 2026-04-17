@@ -53,17 +53,25 @@ public sealed class UnlockZone : MonoBehaviour
     private Coroutine unlockCoroutine;
     private Collider zoneCollider;
     private int activePlayerId = -1;
+    private WaitForSeconds consumeWait;
 
     private UnlockStage CurrentStage => stages[currentStageIndex];
 
     private void Awake()
     {
         zoneCollider = GetComponent<Collider>();
+        consumeWait = new WaitForSeconds(consumeInterval);
 
         InitializeStageObjects();
 
         if (fillImage != null) fillImage.fillAmount = 0f;
         UpdateUI();
+    }
+
+    private void OnValidate()
+    {
+        if (consumeInterval < 0f) consumeInterval = 0f;
+        if (Application.isPlaying) consumeWait = new WaitForSeconds(consumeInterval);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -149,7 +157,17 @@ public sealed class UnlockZone : MonoBehaviour
 
                     cash.transform.DOJump(transform.position, jumpPower, 1, 0.4f)
                         .SetEase(Ease.InQuad)
-                        .OnComplete(() => Destroy(cash));
+                        .OnComplete(() =>
+                        {
+                            if (PoolManager.Instance != null)
+                            {
+                                PoolManager.Instance.ReturnToPool("Cash", cash);
+                            }
+                            else
+                            {
+                                Destroy(cash);
+                            }
+                        });
 
                     currentAmount++;
                     UpdateProgress();
@@ -163,7 +181,7 @@ public sealed class UnlockZone : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(consumeInterval);
+            yield return consumeWait;
         }
     }
 

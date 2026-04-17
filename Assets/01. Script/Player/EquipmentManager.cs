@@ -1,11 +1,20 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public sealed class EquipmentManager : MonoBehaviour
 {
+    private enum EquippedType
+    {
+        None,
+        Pickaxe,
+        Drill1,
+        Drill2,
+    }
+
     [Header("Sockets")]
-    [SerializeField] private Transform weaponSocket; // 곡괭이 소켓
-    [SerializeField] private Transform drill1Socket; // 드릴 1 전용 소켓
-    [SerializeField] private Transform drill2Socket; // 드릴 2 전용 소켓
+    [SerializeField] private Transform weaponSocket;
+    [SerializeField] private Transform drill1Socket;
+    [SerializeField] private Transform drill2Socket;
 
     [Header("Offsets")]
     [SerializeField] private Vector3 defaultPickaxePos = Vector3.zero;
@@ -18,12 +27,15 @@ public sealed class EquipmentManager : MonoBehaviour
     [Header("Default Equipment")]
     [SerializeField] private GameObject defaultPickaxePrefab;
 
+    private readonly Dictionary<GameObject, GameObject> equippedCache = new Dictionary<GameObject, GameObject>();
+
     private GameObject currentEquippedWeapon;
     private PlayerController playerController;
+    private EquippedType currentType;
 
-    public bool IsDrillEquipped => currentEquippedWeapon != null && currentEquippedWeapon.name.Contains("Drill");
-    public bool IsDrill1Equipped => currentEquippedWeapon != null && currentEquippedWeapon.name.Contains("Drill 1");
-    public bool IsDrill2Equipped => currentEquippedWeapon != null && currentEquippedWeapon.name.Contains("Drill 2");
+    public bool IsDrillEquipped => currentType == EquippedType.Drill1 || currentType == EquippedType.Drill2;
+    public bool IsDrill1Equipped => currentType == EquippedType.Drill1;
+    public bool IsDrill2Equipped => currentType == EquippedType.Drill2;
 
     private void Awake()
     {
@@ -53,9 +65,6 @@ public sealed class EquipmentManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 게임 시작 시 기본 장비를 장착합니다.
-    /// </summary>
     private void InitializeEquipment()
     {
         if (defaultPickaxePrefab == null || weaponSocket == null)
@@ -67,55 +76,88 @@ public sealed class EquipmentManager : MonoBehaviour
         EquipWeapon(defaultPickaxePrefab);
     }
 
-    /// <summary>
-    /// 새로운 장비를 소켓에 생성하고 정렬합니다. (업그레이드 시 호출 가능)
-    /// </summary>
     public void EquipWeapon(GameObject weaponPrefab)
     {
+        if (weaponPrefab == null)
+        {
+            Debug.LogWarning("Equipment Manager: Tried to equip a null weapon prefab.");
+            return;
+        }
+
         if (currentEquippedWeapon != null)
         {
-            Destroy(currentEquippedWeapon);
+            currentEquippedWeapon.SetActive(false);
         }
 
-        Transform targetSocket = weaponSocket;
-        Vector3 targetPos = defaultPickaxePos;
-        Vector3 targetRot = defaultPickaxeRot;
+        ResolveSocketAndOffset(
+            weaponPrefab,
+            out Transform targetSocket,
+            out Vector3 targetPos,
+            out Vector3 targetRot,
+            out EquippedType nextType);
 
-        // 프리팹 이름에 따라 대상 소켓과 오프셋을 분기
-        if (weaponPrefab.name.Contains("Drill 1"))
+        if (targetSocket == null)
         {
-            targetSocket = drill1Socket != null ? drill1Socket : weaponSocket;
-            targetPos = defaultDrill1Pos;
-            targetRot = defaultDrill1Rot;
-        }
-        else if (weaponPrefab.name.Contains("Drill 2"))
-        {
-            targetSocket = drill2Socket != null ? drill2Socket : weaponSocket;
-            targetPos = defaultDrill2Pos;
-            targetRot = defaultDrill2Rot;
+            Debug.LogWarning("Equipment Manager: Target socket is missing.");
+            return;
         }
 
-        // 프리팹 생성 및 지정된 소켓의 자식으로 설정
-        currentEquippedWeapon = Instantiate(weaponPrefab, targetSocket);
-        
-        // 로컬 좌표 및 회전값 적용
-        Transform weaponTransform = currentEquippedWeapon.transform;
+        if (!equippedCache.TryGetValue(weaponPrefab, out GameObject weaponInstance) || weaponInstance == null)
+        {
+            weaponInstance = Instantiate(weaponPrefab, targetSocket);
+            equippedCache[weaponPrefab] = weaponInstance;
+        }
+        else
+        {
+            weaponInstance.transform.SetParent(targetSocket, false);
+        }
+
+        Transform weaponTransform = weaponInstance.transform;
         weaponTransform.localPosition = targetPos;
         weaponTransform.localRotation = Quaternion.Euler(targetRot);
-        
-        SetWeaponVisibility(false);
 
+        currentEquippedWeapon = weaponInstance;
+        currentType = nextType;
+
+        SetWeaponVisibility(playerController != null && playerController.IsInMiningZone);
         Debug.Log($"Equipped New Weapon: {weaponPrefab.name} on {targetSocket.name}");
     }
 
-    /// <summary>
-    /// 장비의 활성화/비활성화 상태를 제어합니다.
-    /// </summary>
     public void SetWeaponVisibility(bool visible)
     {
         if (currentEquippedWeapon != null && currentEquippedWeapon.activeSelf != visible)
         {
             currentEquippedWeapon.SetActive(visible);
+        }
+    }
+
+    private void ResolveSocketAndOffset(
+        GameObject weaponPrefab,
+        out Transform targetSocket,
+        out Vector3 targetPos,
+        out Vector3 targetRot,
+        out EquippedType type)
+    {
+        targetSocket = weaponSocket;
+        targetPos = defaultPickaxePos;
+        targetRot = defaultPickaxeRot;
+        type = EquippedType.Pickaxe;
+
+        if (weaponPrefab.name.Contains("Drill 1"))
+        {
+            targetSocket = drill1Socket != null ? drill1Socket : weaponSocket;
+            targetPos = defaultDrill1Pos;
+            targetRot = defaultDrill1Rot;
+            type = EquippedType.Drill1;
+            return;
+        }
+
+        if (weaponPrefab.name.Contains("Drill 2"))
+        {
+            targetSocket = drill2Socket != null ? drill2Socket : weaponSocket;
+            targetPos = defaultDrill2Pos;
+            targetRot = defaultDrill2Rot;
+            type = EquippedType.Drill2;
         }
     }
 }

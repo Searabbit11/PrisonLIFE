@@ -346,9 +346,31 @@ public sealed class StackManager : MonoBehaviour
     }
     private void ApplyCarrySwayOffset()
     {
-        if (stackPivot != null) stackPivot.localPosition = baseStackPivotLocalPos + currentSwayLocalOffset;
-        if (handcuffStackPivot != null) handcuffStackPivot.localPosition = baseHandcuffPivotLocalPos + currentSwayLocalOffset;
-        if (cashStackPivot != null) cashStackPivot.localPosition = baseCashPivotLocalPos + currentSwayLocalOffset;
+        Vector3 worldSwayOffset = transform.TransformVector(currentSwayLocalOffset);
+
+        if (stackPivot != null)
+        {
+            Vector3 localOffset = stackPivot.parent != null
+                ? stackPivot.parent.InverseTransformVector(worldSwayOffset)
+                : worldSwayOffset;
+            stackPivot.localPosition = baseStackPivotLocalPos + localOffset;
+        }
+
+        if (handcuffStackPivot != null)
+        {
+            Vector3 localOffset = handcuffStackPivot.parent != null
+                ? handcuffStackPivot.parent.InverseTransformVector(worldSwayOffset)
+                : worldSwayOffset;
+            handcuffStackPivot.localPosition = baseHandcuffPivotLocalPos + localOffset;
+        }
+
+        if (cashStackPivot != null)
+        {
+            Vector3 localOffset = cashStackPivot.parent != null
+                ? cashStackPivot.parent.InverseTransformVector(worldSwayOffset)
+                : worldSwayOffset;
+            cashStackPivot.localPosition = baseCashPivotLocalPos + localOffset;
+        }
     }
 
     private void KillCarrySwayTween()

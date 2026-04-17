@@ -65,7 +65,10 @@ public sealed class DebugResourceGrantHotkeys : MonoBehaviour
         int missing = stackManager.MaxCarryCount - stackManager.HandcuffCount;
         for (int i = 0; i < missing; i++)
         {
-            GameObject handcuff = Instantiate(handcuffPrefab);
+            GameObject handcuff = PoolManager.Instance != null
+                ? PoolManager.Instance.SpawnFromPool("Handcuff", stackManager.transform.position, Quaternion.identity)
+                : Instantiate(handcuffPrefab);
+            if (handcuff == null) continue;
             Vector3 localPos = stackManager.GetNextHandcuffPosition();
             stackManager.PushHandcuff(handcuff);
             handcuff.transform.localPosition = localPos;
@@ -80,7 +83,10 @@ public sealed class DebugResourceGrantHotkeys : MonoBehaviour
         int missing = stackManager.MaxCarryCount - stackManager.CashCount;
         for (int i = 0; i < missing; i++)
         {
-            GameObject cash = Instantiate(cashPrefab);
+            GameObject cash = PoolManager.Instance != null
+                ? PoolManager.Instance.SpawnFromPool("Cash", stackManager.transform.position, Quaternion.identity)
+                : Instantiate(cashPrefab);
+            if (cash == null) continue;
             stackManager.PushCash(cash);
         }
     }
