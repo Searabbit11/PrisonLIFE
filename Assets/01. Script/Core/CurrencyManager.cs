@@ -60,7 +60,14 @@ public sealed class CurrencyManager : MonoBehaviour
         }
 
         bool wasPlayerMovementEnabled = playerMovement != null && playerMovement.enabled;
-        if (playerMovement != null) playerMovement.enabled = false;
+        if (playerMovement != null)
+        {
+            if (playerMovement is PlayerController pc)
+            {
+                pc.StopImmediately();
+            }
+            playerMovement.enabled = false;
+        }
 
         if (cameraFollowController == null)
         {

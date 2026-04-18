@@ -38,7 +38,6 @@ public sealed class PlayerController : MonoBehaviour
     private EquipmentManager equipmentManager;
     private Camera mainCam;
     private Vector3 moveDirection = Vector3.zero;
-    private float moveInputStrength;
     private bool isMiningState;
 
     private readonly Collider[] miningHitBuffer = new Collider[MaxMiningHits];
@@ -81,6 +80,10 @@ public sealed class PlayerController : MonoBehaviour
         stackManager = GetComponent<StackManager>();
         equipmentManager = GetComponent<EquipmentManager>();
         mainCam = Camera.main;
+        if (joystick == null)
+        {
+            joystick = FindFirstObjectByType<FloatingJoystick>();
+        }
         drillHitWait = new WaitForSeconds(drillHitDelay);
     }
 
@@ -97,6 +100,21 @@ public sealed class PlayerController : MonoBehaviour
         HandleMovement();
         UpdateAnimation();
         HandleMiningAnimation();
+    }
+
+    private void OnDisable()
+    {
+        StopImmediately();
+    }
+
+    public void StopImmediately()
+    {
+        moveDirection = Vector3.zero;
+        if (animator != null)
+        {
+            animator.SetFloat(Speed, 0f);
+        }
+        SetMiningState(false);
     }
 
     public void IncreaseMiningRange(Vector3 bonusSize)
@@ -130,22 +148,26 @@ public sealed class PlayerController : MonoBehaviour
         if (CameraController.Instance != null && CameraController.Instance.IsFocusing)
         {
             moveDirection = Vector3.zero;
-            moveInputStrength = 0f;
             SetMiningState(false);
             return;
         }
 
-        if (joystick == null || joystick.Direction.sqrMagnitude < InputDeadZoneSqr)
+        if (joystick == null)
+        {
+            joystick = FindFirstObjectByType<FloatingJoystick>();
+            moveDirection = Vector3.zero;
+            return;
+        }
+
+        if (joystick.Direction.sqrMagnitude < InputDeadZoneSqr)
         {
             moveDirection = Vector3.zero;
-            moveInputStrength = 0f;
             return;
         }
 
         Vector2 input = joystick.Direction;
         float cameraYaw = mainCam != null ? mainCam.transform.eulerAngles.y : 0f;
         Vector3 localInputDirection = new Vector3(input.x, 0f, input.y);
-        moveInputStrength = Mathf.Clamp01(localInputDirection.magnitude);
 
         moveDirection = (Quaternion.Euler(0f, cameraYaw, 0f) * localInputDirection).normalized;
     }
@@ -153,7 +175,7 @@ public sealed class PlayerController : MonoBehaviour
     private void HandleMovement()
     {
         if (moveDirection == Vector3.zero) return;
-        transform.position += moveDirection * (movementSpeed * moveInputStrength * Time.deltaTime);
+        transform.position += moveDirection * (movementSpeed * Time.deltaTime);
     }
 
     private void HandleRotation()
@@ -168,7 +190,7 @@ public sealed class PlayerController : MonoBehaviour
     {
         if (animator == null) return;
 
-        animator.SetFloat(Speed, moveInputStrength);
+        animator.SetFloat(Speed, moveDirection == Vector3.zero ? 0f : 1f);
         if (equipmentManager != null)
         {
             animator.SetBool(IsDrill, equipmentManager.IsDrillEquipped);

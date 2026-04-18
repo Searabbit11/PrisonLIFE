@@ -80,6 +80,7 @@ public sealed class DeliveryDesk : MonoBehaviour
             {
                 stackManager.PushCash(cash);
                 totalSpawnedCashCount = Mathf.Max(0, totalSpawnedCashCount - 1);
+                GuideManager.Instance.OnCashAcquired();
             }
         }
     }
@@ -97,6 +98,7 @@ public sealed class DeliveryDesk : MonoBehaviour
         if (isFirstPlayerCollider)
         {
             SetZoneActiveVisual(true);
+            GuideManager.Instance.OnEnterDeskZone();
         }
 
         if (collectCoroutine == null && other.TryGetComponent<StackManager>(out var stackManager))
