@@ -89,6 +89,7 @@ public sealed class Converter : MonoBehaviour
 
         nextReceiveTime = Time.time + receiveCooldown;
         ReceiveOreToFloor(ore);
+        GuideManager.Instance.OnOreInputSuccess();
     }
 
     public bool HasProducedHandcuffs()
@@ -123,6 +124,7 @@ public sealed class Converter : MonoBehaviour
 
         Vector3 localTargetPos = playerStack.GetNextHandcuffPosition();
         playerStack.PushHandcuff(handcuff);
+        GuideManager.Instance.OnHandcuffAcquired();
 
         handcuff.transform.DOLocalJump(localTargetPos, jumpPower, 1, jumpDuration).SetEase(Ease.OutQuad);
         handcuff.transform.DOLocalRotate(Vector3.zero, jumpDuration);

@@ -81,6 +81,8 @@ public sealed class ResourceNode : MonoBehaviour
             playerStack.AddOre(orePrefab);
         }
 
+        GuideManager.Instance.OnOreMined();
+
         StartCoroutine(RespawnRoutine());
     }
 

@@ -250,6 +250,7 @@ public sealed class DeliveryDesk : MonoBehaviour
             if (cash == null) continue;
 
             spawnedCashList.Add(cash); 
+            GuideManager.Instance.OnCashGenerated();
             
             int layer = totalSpawnedCashCount / 6;
             int indexInLayer = totalSpawnedCashCount % 6;

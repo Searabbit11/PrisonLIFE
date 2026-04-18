@@ -136,6 +136,7 @@ public sealed class StackManager : MonoBehaviour
         oreTransform.position = startPos + Vector3.up * yOffset;
         
         stackedItems.Add(oreTransform);
+        GuideManager.Instance.OnOreCountChanged(OreCount);
 
         // 뾱(Pop) 연출: 0 -> 1.2 -> 1.0
         oreTransform.localScale = Vector3.zero;

@@ -39,6 +39,10 @@ public sealed class ConverterZone : MonoBehaviour
         if (playerColliderIds.Add(other.GetInstanceID()) && playerColliderIds.Count == 1)
         {
             SetZoneActiveVisual(true);
+            if (type == ZoneType.Input)
+            {
+                GuideManager.Instance.OnEnterInputZone();
+            }
         }
     }
 
