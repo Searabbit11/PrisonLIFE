@@ -117,7 +117,10 @@ public sealed class CriminalManager : MonoBehaviour
             ? prisonFocusPoint.position
             : (prisonSlots != null && prisonSlots.Length > 0 ? prisonSlots[prisonSlots.Length / 2].position : queuePosition);
 
-        CameraController.Instance.FocusTarget(focusPos, 1.2f, 1.5f);
+        if (CameraController.Instance != null && CameraController.Instance.IsFocusing == false)
+        {
+            CameraController.Instance.FocusTarget(focusPos, 1.2f, 1.5f);
+        }
     }
 
     public void UpdateQueuePositions()

@@ -31,6 +31,10 @@ public sealed class UpgradeFlowController : MonoBehaviour
     [SerializeField] private bool hideDrillZoneWhenComplete = true;
     [SerializeField] private bool hideMinerNpcZoneWhenComplete = true;
 
+    [Header("Ending")]
+    [SerializeField] private EndingUIController endingUIController;
+    private bool hasStartedEndingSequence;
+
     private void OnEnable()
     {
         if (drillUpgradeZone != null)
@@ -150,9 +154,27 @@ public sealed class UpgradeFlowController : MonoBehaviour
             CriminalManager.Instance.UpgradeCapacity(prisonZone2Capacity, prisonZone2Slots);
         }
 
+        bool startedCameraFocus = false;
         if (prisonZone2FocusPoint != null && CameraController.Instance != null)
         {
             CameraController.Instance.FocusTarget(prisonZone2FocusPoint.position, 1.5f, 2.0f, prisonZone2CameraZoom);
+            startedCameraFocus = true;
         }
+
+        if (endingUIController != null && hasStartedEndingSequence == false)
+        {
+            hasStartedEndingSequence = true;
+            StartCoroutine(WaitCameraAndShowEnding(startedCameraFocus));
+        }
+    }
+
+    private System.Collections.IEnumerator WaitCameraAndShowEnding(bool waitForCameraFocus)
+    {
+        if (waitForCameraFocus && CameraController.Instance != null)
+        {
+            yield return new WaitWhile(() => CameraController.Instance != null && CameraController.Instance.IsFocusing);
+        }
+
+        endingUIController.ShowEnding();
     }
 }
