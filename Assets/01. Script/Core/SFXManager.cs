@@ -34,12 +34,16 @@ public sealed class SFXManager : MonoBehaviour
     [SerializeField] private float drillCooldown = 0.03f;
     [SerializeField] private float unlockFillCooldown = 0.04f;
     [SerializeField] private float cashSpawnCooldown = 0.12f;
+    
+    [Header("Unlock Fill Options")]
+    [SerializeField] private bool preventUnlockFillLoop = true;
 
     private float lastPickaxeTime = -999f;
     private float lastDrillTime = -999f;
     private float lastUnlockFillTime = -999f;
     private float lastCashSpawnTime = -999f;
     private AudioSource uiAudioSource;
+    private bool unlockFillLoopBlocked;
 
     private void Awake()
     {
@@ -101,13 +105,21 @@ public sealed class SFXManager : MonoBehaviour
 
     public void PlayUnlockFill(Vector3 position)
     {
+        if (preventUnlockFillLoop && unlockFillLoopBlocked) return;
         if (!PassCooldown(ref lastUnlockFillTime, unlockFillCooldown)) return;
+        if (preventUnlockFillLoop) unlockFillLoopBlocked = true;
         PlayAtPosition(unlockFillClip, position);
     }
 
     public void PlayUnlockComplete(Vector3 position)
     {
+        unlockFillLoopBlocked = false;
         PlayAtPosition(unlockCompleteClip, position);
+    }
+
+    public void ResetUnlockFillLoopBlock()
+    {
+        unlockFillLoopBlocked = false;
     }
 
     public void PlayEndingShow()

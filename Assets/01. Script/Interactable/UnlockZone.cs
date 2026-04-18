@@ -112,6 +112,11 @@ public sealed class UnlockZone : MonoBehaviour
         {
             ReleaseZoneClaim(playerStack);
         }
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.ResetUnlockFillLoopBlock();
+        }
     }
 
     private void OnDisable()
@@ -130,6 +135,11 @@ public sealed class UnlockZone : MonoBehaviour
             }
 
             activePlayerId = -1;
+        }
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.ResetUnlockFillLoopBlock();
         }
     }
 

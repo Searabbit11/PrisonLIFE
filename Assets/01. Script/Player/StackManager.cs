@@ -83,7 +83,7 @@ public sealed class StackManager : MonoBehaviour
 
     public void SetUseSway(bool use)
     {
-        InitializeBasePositions(); // 위치 초기화 보장
+        InitializeBasePositions(); // ?�치 초기??보장
         useSway = use;
         if (!useSway)
         {
@@ -112,7 +112,7 @@ public sealed class StackManager : MonoBehaviour
 
     private void Start()
     {
-        // basePos 초기화는 Awake에서 수행됨
+        // basePos 초기?�는 Awake?�서 ?�행??
         ApplyCarrySwayOffset();
     }
 
@@ -132,7 +132,7 @@ public sealed class StackManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 외부에서 호출 시 즉시 등 뒤 스택에 광석을 추가합니다.
+    /// ?��??�서 ?�출 ??즉시 ?????�택??광석??추�??�니??
     /// </summary>
     public void AddOre(GameObject orePrefab)
     {
@@ -142,26 +142,22 @@ public sealed class StackManager : MonoBehaviour
             return;
         }
 
-        // PoolManager에서 광석을 가져옵니다.
+        // PoolManager?�서 광석??가?�옵?�다.
         GameObject ore = PoolManager.Instance.SpawnFromPool("Ore", stackPivot.position, Quaternion.identity);
         if (ore == null) return;
 
         Transform oreTransform = ore.transform;
-        // 생성된 광석의 부모를 플레이어의 스택 피벗으로 설정합니다.
+        // ?�성??광석??부모�? ?�레?�어???�택 ?�벗?�로 ?�정?�니??
         oreTransform.SetParent(stackPivot);
         
-        // 생성 시 위치를 마지막 아이템(또는 피벗) 근처로 설정하여 순간이동 방지
+        // ?�성 ???�치�?마�?�??�이???�는 ?�벗) 근처�??�정?�여 ?�간?�동 방�?
         Vector3 startPos = stackedItems.Count == 0 ? stackPivot.position : stackedItems[^1].position;
         oreTransform.position = startPos + Vector3.up * yOffset;
         
         stackedItems.Add(oreTransform);
         GuideManager.Instance.OnOreCountChanged(OreCount);
-        if (SFXManager.Instance != null)
-        {
-            SFXManager.Instance.PlayItemPick(transform.position);
-        }
 
-        // 뾱(Pop) 연출: 0 -> 1.2 -> 1.0
+        // �?Pop) ?�출: 0 -> 1.2 -> 1.0
         oreTransform.localScale = Vector3.zero;
         oreTransform.DOScale(1.2f, 0.15f).SetEase(Ease.OutBack).OnComplete(() =>
         {
@@ -185,7 +181,7 @@ public sealed class StackManager : MonoBehaviour
         }
     }
     
-    // 각 광석이 앞선 오브젝트를 따라가며 부드럽게 휘어지도록 계산
+    // �?광석???�선 ?�브?�트�??�라가�?부?�럽�??�어지?�록 계산
     private void UpdateStackMovement()
     {
         int stackCount = stackedItems.Count;
@@ -279,7 +275,7 @@ public sealed class StackManager : MonoBehaviour
         stackedItems.RemoveAt(stackedItems.Count - 1);
         lastItem.DOKill();
         
-        // 스택에서 빠져나왔으므로 부모 관계 해제
+        // ?�택?�서 빠져?�왔?��?�?부�?관�??�제
         lastItem.SetParent(null);
         if (SFXManager.Instance != null)
         {
@@ -288,13 +284,13 @@ public sealed class StackManager : MonoBehaviour
         return lastItem.gameObject;
     }
 
-    #region Handcuff Stack Logic (가슴 앞)
+    #region Handcuff Stack Logic (가????
     public void PushHandcuff(GameObject handcuff)
     {
-        // 부모 설정을 최우선으로 수행하여 로컬 좌표계 기준점을 잡습니다.
+        // 부�??�정??최우?�으�??�행?�여 로컬 좌표�?기�??�을 ?�습?�다.
         handcuff.transform.SetParent(handcuffStackPivot);
         
-        // 리스트에 추가
+        // 리스?�에 추�?
         handcuffItems.Add(handcuff);
         if (SFXManager.Instance != null)
         {
@@ -319,30 +315,30 @@ public sealed class StackManager : MonoBehaviour
 
     public Vector3 GetNextHandcuffPosition()
     {
-        // X, Z축 오프셋을 제거하고 오직 Y축 스택 위치(로컬 좌표)만 반환
+        // X, Z�??�프?�을 ?�거?�고 ?�직 Y�??�택 ?�치(로컬 좌표)�?반환
         return new Vector3(0f, (handcuffItems.Count) * handcuffYOffset, 0f);
     }
     #endregion
 
-    #region Cash Stack Logic (등 뒤)
+    #region Cash Stack Logic (????
     public void PushCash(GameObject cash)
     {
-        // 1. 기존 트윈 종료 및 물리 충돌 방지
+        // 1. 기존 ?�윈 종료 �?물리 충돌 방�?
         cash.transform.DOKill();
         if (cash.TryGetComponent<Collider>(out var col)) col.enabled = false;
 
-        // 2. 부모 설정 및 리스트 추가
+        // 2. 부�??�정 �?리스??추�?
         cash.transform.SetParent(cashStackPivot);
         cashStack.Add(cash);
 
-        // 3. 로컬 목표 위치 계산 (Y축 적재)
+        // 3. 로컬 목표 ?�치 계산 (Y�??�재)
         Vector3 targetLocalPos = new Vector3(0, (cashStack.Count - 1) * cashYOffset, 0);
 
-        // 4. 점프 연출로 등 뒤 피벗에 안착
+        // 4. ?�프 ?�출�??????�벗???�착
         cash.transform.DOLocalJump(targetLocalPos, 1.5f, 1, 0.4f).SetEase(Ease.OutQuad);
         cash.transform.DOLocalRotate(Vector3.zero, 0.4f);
 
-        // CurrencyManager 연동: 보유 금액 증가
+        // CurrencyManager ?�동: 보유 금액 증�?
         CurrencyManager.Instance.AddCash(1);
     }
 
@@ -506,3 +502,5 @@ public sealed class StackManager : MonoBehaviour
         isStopBounceActive = false;
     }
 }
+
+

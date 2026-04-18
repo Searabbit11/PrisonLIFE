@@ -28,6 +28,9 @@ public sealed class DeliveryDesk : MonoBehaviour
     [SerializeField] private int maxCashCapacity = 100;
     [SerializeField] private FloatingText floatingText;
     
+    [Header("SFX")]
+    [SerializeField] private int cashCollectSfxEvery = 5;
+    
     [Header("Zone Visual")]
     [SerializeField] private Renderer zoneRenderer;
     [SerializeField] private Color normalColor = Color.white;
@@ -43,6 +46,7 @@ public sealed class DeliveryDesk : MonoBehaviour
     private Coroutine collectCoroutine;
     private float nextDeliveryTime;
     private int totalSpawnedCashCount = 0; 
+    private int cashCollectedSinceLastSfx = 0;
     private WaitForSeconds collectWait;
 
     private void Awake()
@@ -64,6 +68,7 @@ public sealed class DeliveryDesk : MonoBehaviour
     private void OnValidate()
     {
         if (collectInterval < 0f) collectInterval = 0f;
+        if (cashCollectSfxEvery < 1) cashCollectSfxEvery = 1;
         if (Application.isPlaying) collectWait = new WaitForSeconds(collectInterval);
     }
 
@@ -81,9 +86,11 @@ public sealed class DeliveryDesk : MonoBehaviour
                 stackManager.PushCash(cash);
                 totalSpawnedCashCount = Mathf.Max(0, totalSpawnedCashCount - 1);
                 GuideManager.Instance.OnCashAcquired();
-                if (SFXManager.Instance != null)
+                cashCollectedSinceLastSfx++;
+                if (cashCollectedSinceLastSfx >= cashCollectSfxEvery && SFXManager.Instance != null)
                 {
                     SFXManager.Instance.PlayCashCollect(transform.position);
+                    cashCollectedSinceLastSfx = 0;
                 }
             }
         }

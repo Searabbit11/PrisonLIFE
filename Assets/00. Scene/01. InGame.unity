@@ -6709,7 +6709,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 243bcf25072c4f147bc83266ffd31350, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  masterVolume: 5
+  masterVolume: 1
   pickaxeMineClip: {fileID: 8300000, guid: 06887a9182425794b993853b44af72b5, type: 3}
   drillMineClip: {fileID: 8300000, guid: 08c3c6e496f9bb243b7a3066cf826363, type: 3}
   itemPickClip: {fileID: 8300000, guid: 47415f4e7e8eb7b4a8fda87156848ffb, type: 3}
@@ -6721,9 +6721,10 @@ MonoBehaviour:
   unlockCompleteClip: {fileID: 0}
   endingShowClip: {fileID: 0}
   pickaxeCooldown: 0.04
-  drillCooldown: 0.03
-  unlockFillCooldown: 0.04
+  drillCooldown: 0.15
+  unlockFillCooldown: 0.22
   cashSpawnCooldown: 0.12
+  preventUnlockFillLoop: 0
 --- !u!4 &884616914
 Transform:
   m_ObjectHideFlags: 0
