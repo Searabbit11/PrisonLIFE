@@ -132,15 +132,31 @@ public sealed class CriminalManager : MonoBehaviour
             Transform targetPoint = queuePoints[i];
             if (targetPoint == null) continue;
 
+            if (i != 0)
+            {
+                criminal.SetCanReceiveHandcuffs(false);
+                criminal.SetBubbleActive(false);
+            }
+
             if (Vector3.Distance(criminal.transform.position, targetPoint.position) < 0.1f)
             {
-                if (i == 0) criminal.SetBubbleActive(true);
+                if (i == 0)
+                {
+                    criminal.SetCanReceiveHandcuffs(true);
+                    criminal.SetBubbleActive(true);
+                }
                 continue;
             }
 
             if (i == 0)
             {
-                criminal.MoveToQueuePoint(targetPoint, () => criminal.SetBubbleActive(true));
+                criminal.SetCanReceiveHandcuffs(false);
+                criminal.SetBubbleActive(false);
+                criminal.MoveToQueuePoint(targetPoint, () =>
+                {
+                    criminal.SetCanReceiveHandcuffs(true);
+                    criminal.SetBubbleActive(true);
+                });
             }
             else
             {

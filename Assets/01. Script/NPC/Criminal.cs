@@ -3,6 +3,7 @@ using System;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Rigidbody))]
 public sealed class Criminal : MonoBehaviour
@@ -13,6 +14,7 @@ public sealed class Criminal : MonoBehaviour
     [SerializeField] private TMP_Text countText;
     [SerializeField] private GameObject bubbleUI;
     [SerializeField] private Transform deliverPivot;
+    [SerializeField] private Image requirementFillImage;
 
     [Header("Visuals")]
     [SerializeField] private GameObject[] clothesMeshes;
@@ -27,6 +29,7 @@ public sealed class Criminal : MonoBehaviour
     [Header("Handcuff Settings")]
     [SerializeField] private int minRequiredHandcuffs = 2;
     [SerializeField] private int maxRequiredHandcuffs = 5;
+    [SerializeField] private float arrestDelayAfterZero = 0.2f;
 
     private Camera mainCamera;
     private DeliveryDesk deliveryDesk;
@@ -35,8 +38,11 @@ public sealed class Criminal : MonoBehaviour
     private int initialRequiredHandcuffs;
     private bool isArrested;
     private bool isCounted;
+    private bool canReceiveHandcuffs;
+    private bool isArrestPending;
 
     public bool NeedsHandcuffs => requiredHandcuffs > 0 && isArrested == false;
+    public bool CanReceiveHandcuffs => canReceiveHandcuffs && NeedsHandcuffs && isArrestPending == false;
 
     private void Awake()
     {
@@ -80,15 +86,21 @@ public sealed class Criminal : MonoBehaviour
 
     public void ReceiveHandcuff()
     {
-        if (isArrested) return;
+        if (isArrested || isArrestPending || CanReceiveHandcuffs == false) return;
 
-        requiredHandcuffs--;
+        requiredHandcuffs = Mathf.Max(0, requiredHandcuffs - 1);
         UpdateUI();
 
-        if (requiredHandcuffs <= 0)
+        if (requiredHandcuffs == 0)
         {
-            OnArrested();
+            isArrestPending = true;
+            StartCoroutine(ArrestAfterDelayRoutine());
         }
+    }
+
+    public void SetCanReceiveHandcuffs(bool canReceive)
+    {
+        canReceiveHandcuffs = canReceive;
     }
 
     public void MoveToQueuePoint(Transform targetPoint, Action onComplete = null)
@@ -114,6 +126,8 @@ public sealed class Criminal : MonoBehaviour
     private void OnArrested()
     {
         isArrested = true;
+        isArrestPending = false;
+        canReceiveHandcuffs = false;
 
         transform.DOKill();
         SetRequirementUIVisible(false);
@@ -182,17 +196,35 @@ public sealed class Criminal : MonoBehaviour
         if (animator != null) animator.SetBool(IsWalking, false);
     }
 
+    private IEnumerator ArrestAfterDelayRoutine()
+    {
+        if (arrestDelayAfterZero > 0f)
+        {
+            yield return new WaitForSeconds(arrestDelayAfterZero);
+        }
+
+        OnArrested();
+    }
+
     private void UpdateUI()
     {
         if (countText != null)
         {
             countText.text = requiredHandcuffs.ToString();
         }
+
+        if (requirementFillImage != null)
+        {
+            float progress = initialRequiredHandcuffs > 0
+                ? 1f - ((float)requiredHandcuffs / initialRequiredHandcuffs)
+                : 1f;
+            requirementFillImage.fillAmount = Mathf.Clamp01(progress);
+        }
     }
 
     private void SetRequirementUIVisible(bool visible)
     {
-        bool shouldShow = visible && isArrested == false && requiredHandcuffs > 0;
+        bool shouldShow = visible && isArrested == false && (requiredHandcuffs > 0 || isArrestPending);
 
         if (bubbleUI != null)
         {

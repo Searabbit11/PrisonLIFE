@@ -27,9 +27,19 @@ public sealed class DeliveryDesk : MonoBehaviour
     [SerializeField] private int maxHandcuffCapacity = 50;
     [SerializeField] private int maxCashCapacity = 100;
     [SerializeField] private FloatingText floatingText;
+    
+    [Header("Zone Visual")]
+    [SerializeField] private Renderer zoneRenderer;
+    [SerializeField] private Color normalColor = Color.white;
+    [SerializeField] private Color activeColor = Color.green;
 
     private readonly List<GameObject> deskHandcuffs = new List<GameObject>();
     private readonly List<GameObject> spawnedCashList = new List<GameObject>(); 
+    private readonly HashSet<int> playerColliderIds = new HashSet<int>();
+    private MaterialPropertyBlock zonePropertyBlock;
+    private int colorPropertyId = -1;
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
     private Coroutine collectCoroutine;
     private float nextDeliveryTime;
     private int totalSpawnedCashCount = 0; 
@@ -38,6 +48,17 @@ public sealed class DeliveryDesk : MonoBehaviour
     private void Awake()
     {
         collectWait = new WaitForSeconds(collectInterval);
+
+        if (zoneRenderer == null)
+        {
+            zoneRenderer = GetComponent<Renderer>();
+        }
+
+        if (zoneRenderer == null) return;
+
+        zonePropertyBlock = new MaterialPropertyBlock();
+        CacheColorProperty();
+        SetZoneActiveVisual(false);
     }
 
     private void OnValidate()
@@ -70,22 +91,62 @@ public sealed class DeliveryDesk : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && other.TryGetComponent<StackManager>(out var stackManager))
+        if (!other.CompareTag("Player")) return;
+
+        bool isFirstPlayerCollider = playerColliderIds.Add(other.GetInstanceID()) && playerColliderIds.Count == 1;
+        if (isFirstPlayerCollider)
         {
-            if (collectCoroutine != null) StopCoroutine(collectCoroutine);
+            SetZoneActiveVisual(true);
+        }
+
+        if (collectCoroutine == null && other.TryGetComponent<StackManager>(out var stackManager))
+        {
             collectCoroutine = StartCoroutine(CollectHandcuffsRoutine(stackManager));
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player")) return;
+
+        if (playerColliderIds.Remove(other.GetInstanceID()) && playerColliderIds.Count == 0)
         {
             if (collectCoroutine != null)
             {
                 StopCoroutine(collectCoroutine);
                 collectCoroutine = null;
             }
+
+            SetZoneActiveVisual(false);
+        }
+    }
+
+    private void SetZoneActiveVisual(bool isActive)
+    {
+        if (zoneRenderer == null || zonePropertyBlock == null || colorPropertyId == -1) return;
+
+        zoneRenderer.GetPropertyBlock(zonePropertyBlock);
+        zonePropertyBlock.SetColor(colorPropertyId, isActive ? activeColor : normalColor);
+        zoneRenderer.SetPropertyBlock(zonePropertyBlock);
+    }
+
+    private void CacheColorProperty()
+    {
+        var sharedMat = zoneRenderer.sharedMaterial;
+        if (sharedMat == null) return;
+
+        if (sharedMat.HasProperty(BaseColorId))
+        {
+            colorPropertyId = BaseColorId;
+        }
+        else if (sharedMat.HasProperty(ColorId))
+        {
+            colorPropertyId = ColorId;
+        }
+
+        if (colorPropertyId != -1)
+        {
+            normalColor = sharedMat.GetColor(colorPropertyId);
         }
     }
     
@@ -145,7 +206,7 @@ public sealed class DeliveryDesk : MonoBehaviour
 
         var targetCriminal = CriminalManager.Instance.GetFirstCriminalInQueue();
         
-        if (targetCriminal != null && targetCriminal.NeedsHandcuffs == true)
+        if (targetCriminal != null && targetCriminal.CanReceiveHandcuffs == true)
         {
             nextDeliveryTime = Time.time + deliveryInterval;
 

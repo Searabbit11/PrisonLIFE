@@ -701,6 +701,82 @@ Transform:
   - {fileID: 8379800629274785299}
   m_Father: {fileID: 7104173005731302790}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1236560799769097603
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8856843995276805530}
+  - component: {fileID: 8204528286654689364}
+  - component: {fileID: 8019349382656524768}
+  m_Layer: 5
+  m_Name: fill
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &8856843995276805530
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1236560799769097603}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4597777991699372326}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.00061519, y: -0}
+  m_SizeDelta: {x: 117.97, y: 68.07}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &8204528286654689364
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1236560799769097603}
+  m_CullTransparentMesh: 1
+--- !u!114 &8019349382656524768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1236560799769097603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.12220478, g: 1, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: -4441273924919490741, guid: 7f9865cf6ac20f7468e13d5a5daff8ef,
+    type: 3}
+  m_Type: 3
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 1
+  m_FillAmount: 0
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1342005073427678701
 GameObject:
   m_ObjectHideFlags: 0
@@ -2142,6 +2218,7 @@ GameObject:
   - component: {fileID: 4597777991699372326}
   - component: {fileID: 3736176296292363754}
   - component: {fileID: 1553060013021247716}
+  - component: {fileID: 6027898773188393721}
   m_Layer: 5
   m_Name: Image
   m_TagString: NPC
@@ -2161,6 +2238,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 8856843995276805530}
   - {fileID: 4852446675503805340}
   - {fileID: 4288120278622481563}
   m_Father: {fileID: 1924354604864639722}
@@ -2209,6 +2287,19 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6027898773188393721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5591817990998651560}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ShowMaskGraphic: 1
 --- !u!1 &5660815345959915430
 GameObject:
   m_ObjectHideFlags: 0
@@ -3038,6 +3129,7 @@ MonoBehaviour:
   countText: {fileID: 269554774614197339}
   bubbleUI: {fileID: 5696314872531743464}
   deliverPivot: {fileID: 4824845275912985527}
+  requirementFillImage: {fileID: 8019349382656524768}
   clothesMeshes:
   - {fileID: 3811642724677513916}
   - {fileID: 3649612334403062580}
@@ -3048,7 +3140,7 @@ MonoBehaviour:
   rotationSpeed: 0.2
   exitRotationAngle: 180
   minRequiredHandcuffs: 2
-  maxRequiredHandcuffs: 5
+  maxRequiredHandcuffs: 4
 --- !u!54 &2986090614329671826
 Rigidbody:
   m_ObjectHideFlags: 0
