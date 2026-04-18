@@ -33,7 +33,6 @@ public sealed class StackManager : MonoBehaviour
     [SerializeField] private float swayReturnDuration = 0.2f;
 
     [Header("Carry Curve Visual")]
-    [SerializeField] private float curveBackMaxOffset = 0.18f;
     [SerializeField] private float curveSpeedForMaxOffset = 4f;
     [SerializeField] private float curveVelocityLerp = 10f;
     
@@ -157,6 +156,10 @@ public sealed class StackManager : MonoBehaviour
         
         stackedItems.Add(oreTransform);
         GuideManager.Instance.OnOreCountChanged(OreCount);
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayItemPick(transform.position);
+        }
 
         // 뾱(Pop) 연출: 0 -> 1.2 -> 1.0
         oreTransform.localScale = Vector3.zero;
@@ -278,6 +281,10 @@ public sealed class StackManager : MonoBehaviour
         
         // 스택에서 빠져나왔으므로 부모 관계 해제
         lastItem.SetParent(null);
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayItemPlace(transform.position);
+        }
         return lastItem.gameObject;
     }
 
@@ -289,6 +296,10 @@ public sealed class StackManager : MonoBehaviour
         
         // 리스트에 추가
         handcuffItems.Add(handcuff);
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayItemPick(transform.position);
+        }
     }
 
     public GameObject PopHandcuff()
@@ -299,6 +310,10 @@ public sealed class StackManager : MonoBehaviour
         handcuffItems.RemoveAt(handcuffItems.Count - 1);
         last.transform.DOKill();
         last.transform.SetParent(null);
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayItemPlace(transform.position);
+        }
         return last;
     }
 

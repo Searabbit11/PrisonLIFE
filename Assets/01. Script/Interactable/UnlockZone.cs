@@ -171,6 +171,11 @@ public sealed class UnlockZone : MonoBehaviour
                             }
                         });
 
+                    if (SFXManager.Instance != null)
+                    {
+                        SFXManager.Instance.PlayUnlockFill(absorbTargetPosition);
+                    }
+
                     currentAmount++;
                     UpdateProgress();
                     CurrencyManager.Instance.SpendCash(1);
@@ -191,6 +196,11 @@ public sealed class UnlockZone : MonoBehaviour
     {
         int completedStageIndex = currentStageIndex;
         UnlockStage completedStage = CurrentStage;
+
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayUnlockComplete(GetCashAbsorbPosition(null));
+        }
 
         ApplyStageTarget(completedStage, equipmentManager);
 

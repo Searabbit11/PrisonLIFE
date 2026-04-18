@@ -81,6 +81,10 @@ public sealed class DeliveryDesk : MonoBehaviour
                 stackManager.PushCash(cash);
                 totalSpawnedCashCount = Mathf.Max(0, totalSpawnedCashCount - 1);
                 GuideManager.Instance.OnCashAcquired();
+                if (SFXManager.Instance != null)
+                {
+                    SFXManager.Instance.PlayCashCollect(transform.position);
+                }
             }
         }
     }
@@ -238,6 +242,10 @@ public sealed class DeliveryDesk : MonoBehaviour
         if (cashSpawnPoint == null || spawnOrigin == null) return;
 
         int amountToSpawn = initialRequiredAmount * 2;
+        if (amountToSpawn > 0 && SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayCashSpawn(spawnOrigin.position);
+        }
 
         for (int i = 0; i < amountToSpawn; i++)
         {

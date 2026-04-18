@@ -18,6 +18,11 @@ public class EndingUIController : MonoBehaviour
         if (hasShown) return;
         hasShown = true;
 
+        if (SFXManager.Instance != null)
+        {
+            SFXManager.Instance.PlayEndingShow();
+        }
+
         if (endingRoot != null)
         {
             endingRoot.SetActive(true);

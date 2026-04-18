@@ -6680,6 +6680,65 @@ Transform:
   m_Children: []
   m_Father: {fileID: 516225171}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &884616912
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 884616914}
+  - component: {fileID: 884616913}
+  m_Layer: 0
+  m_Name: SFXManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &884616913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884616912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 243bcf25072c4f147bc83266ffd31350, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  masterVolume: 5
+  pickaxeMineClip: {fileID: 8300000, guid: 06887a9182425794b993853b44af72b5, type: 3}
+  drillMineClip: {fileID: 8300000, guid: 08c3c6e496f9bb243b7a3066cf826363, type: 3}
+  itemPickClip: {fileID: 8300000, guid: 47415f4e7e8eb7b4a8fda87156848ffb, type: 3}
+  itemPlaceClip: {fileID: 8300000, guid: c77830094103cf342be084b58619bf11, type: 3}
+  pressClip: {fileID: 8300000, guid: b48edcff794344b4fa48d09c9cbf71cf, type: 3}
+  cashSpawnClip: {fileID: 0}
+  cashCollectClip: {fileID: 8300000, guid: 3c75661bcee20c24ca89219fdb141bec, type: 3}
+  unlockFillClip: {fileID: 8300000, guid: f9567c35d6709e64d9d26aab43fdeada, type: 3}
+  unlockCompleteClip: {fileID: 0}
+  endingShowClip: {fileID: 0}
+  pickaxeCooldown: 0.04
+  drillCooldown: 0.03
+  unlockFillCooldown: 0.04
+  cashSpawnCooldown: 0.12
+--- !u!4 &884616914
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884616912}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.662397, y: 4.0187287, z: 24.83641}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &885080601
 GameObject:
   m_ObjectHideFlags: 0
@@ -17906,3 +17965,4 @@ SceneRoots:
   - {fileID: 1042777726}
   - {fileID: 851906070}
   - {fileID: 1124971439}
+  - {fileID: 884616914}

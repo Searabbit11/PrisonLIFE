@@ -330,6 +330,10 @@ public sealed class PlayerController : MonoBehaviour
         ResourceNode nearestNode = miningNodeBuffer[nearestIndex];
         if (nearestNode != null)
         {
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayPickaxeMine(transform.position);
+            }
             nearestNode.TakeDamage(1, stackManager);
         }
     }
@@ -373,6 +377,10 @@ public sealed class PlayerController : MonoBehaviour
             ResourceNode node = miningNodeBuffer[i];
             if (node == null) continue;
 
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayDrillMine(transform.position);
+            }
             node.TakeDamage(1, stackManager);
             yield return drillHitWait;
         }

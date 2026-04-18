@@ -242,6 +242,11 @@ public sealed class Converter : MonoBehaviour
                 pressSeq.Append(customCubePress.DOMove(downPos, 0.1f).SetEase(Ease.InExpo));
                 pressSeq.AppendCallback(() =>
                 {
+                    if (SFXManager.Instance != null)
+                    {
+                        SFXManager.Instance.PlayPress(pressPoint != null ? pressPoint.position : transform.position);
+                    }
+
                     PoolManager.Instance.ReturnToPool("Ingot", ingot);
 
                     GameObject handcuff = PoolManager.Instance.SpawnFromPool("Handcuff", pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
@@ -254,6 +259,10 @@ public sealed class Converter : MonoBehaviour
                 return;
             }
 
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlayPress(pressPoint != null ? pressPoint.position : transform.position);
+            }
             PoolManager.Instance.ReturnToPool("Ingot", ingot);
             GameObject handcuffAlt = PoolManager.Instance.SpawnFromPool("Handcuff", pressPoint.position, Quaternion.Euler(handcuffSpawnRotation));
             if (handcuffAlt != null)
