@@ -12,7 +12,6 @@ public sealed class StackManager : MonoBehaviour
     [SerializeField] private int maxStackCount = 10;
     [SerializeField] private float yOffset = 0.18f;
     [SerializeField] private Transform stackPivot;
-    private const float FollowSpeed = 15f;
     private readonly List<Transform> stackedItems = new List<Transform>();
 
     [Header("Handcuff Stack Settings")]
@@ -37,6 +36,18 @@ public sealed class StackManager : MonoBehaviour
     [SerializeField] private float curveBackMaxOffset = 0.18f;
     [SerializeField] private float curveSpeedForMaxOffset = 4f;
     [SerializeField] private float curveVelocityLerp = 10f;
+    
+    [Header("Handcuff/Cash Rod Bend")]
+    [SerializeField] private float rodBendMaxOffset = 0.22f;
+    [SerializeField] private float rodBendExponent = 1.8f;
+    [SerializeField] private float rodBendVelocityLerp = 14f;
+    [SerializeField] private float stackFollowLerp = 15f;
+
+    [Header("Stop Bounce")]
+    [SerializeField] private float stopBounceBendAmount = 0.55f;
+    [SerializeField] private float stopBounceDuration = 0.35f;
+    [SerializeField] private float stopBounceOscillations = 2.2f;
+    [SerializeField] private float stopBounceDamping = 3.5f;
 
     [Header("UI Settings")]
     [SerializeField] private FloatingText floatingText;
@@ -56,8 +67,14 @@ public sealed class StackManager : MonoBehaviour
     private Vector3 swayDirectionLocal = Vector3.back;
     private Vector3 lastOwnerWorldPos;
     private Tween swayReturnTween;
+    private Tween stopBounceTween;
     private Vector3 smoothedHorizontalVelocityWorld;
     private bool isBasePosInitialized;
+    private bool wasMovingLastFrame;
+    private Vector3 lastBendDirWorld = Vector3.back;
+    private float stopBounceBendOffsetAmount;
+    private bool isStopBounceActive;
+    private float cachedBaseBendSpeedRatio;
 
     public void IncreaseMaxCapacity(int amount)
     {
@@ -103,13 +120,16 @@ public sealed class StackManager : MonoBehaviour
     private void OnDisable()
     {
         KillCarrySwayTween();
+        KillStopBounceTween();
         currentSwayLocalOffset = Vector3.zero;
+        stopBounceBendOffsetAmount = 0f;
         ApplyCarrySwayOffset();
     }
 
     private void OnDestroy()
     {
         KillCarrySwayTween();
+        KillStopBounceTween();
     }
 
     /// <summary>
@@ -169,10 +189,12 @@ public sealed class StackManager : MonoBehaviour
         if (stackCount == 0) return;
 
         float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
-        float speedRatio = Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
-        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : Vector3.zero;
+        float speedRatio = isStopBounceActive
+            ? cachedBaseBendSpeedRatio
+            : Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
+        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : lastBendDirWorld;
 
-        float lerpAmount = Time.deltaTime * FollowSpeed;
+        float lerpAmount = Time.deltaTime * stackFollowLerp;
 
         for (int i = 0; i < stackCount; i++)
         {
@@ -181,12 +203,15 @@ public sealed class StackManager : MonoBehaviour
 
             Vector3 targetPos = target.position + (Vector3.up * yOffset);
 
-            if (stackCount > 2)
+            if (stackCount > 1)
             {
-                float t = i / (float)(stackCount - 1);
-                float centerProfile = 4f * t * (1f - t);
-                Vector3 curveOffset = backDir * (curveBackMaxOffset * speedRatio * centerProfile);
-                targetPos += curveOffset;
+                // Apply the same "single bent rod" profile used by handcuffs/cash.
+                float t = (i + 1f) / stackCount;
+                float bendProfile = Mathf.Pow(t, Mathf.Max(1f, rodBendExponent));
+                float baseBend = rodBendMaxOffset * speedRatio * bendProfile;
+                float bounceBend = stopBounceBendOffsetAmount * bendProfile;
+                Vector3 bendOffset = backDir * (baseBend + bounceBend);
+                targetPos += bendOffset;
             }
 
             current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
@@ -196,12 +221,12 @@ public sealed class StackManager : MonoBehaviour
 
     private void UpdateHandcuffStackMovement()
     {
-        UpdateDynamicStackMovement(handcuffItems, handcuffStackPivot, handcuffYOffset, false);
+        UpdateDynamicStackMovement(handcuffItems, handcuffStackPivot, handcuffYOffset, true);
     }
 
     private void UpdateCashStackMovement()
     {
-        UpdateDynamicStackMovement(cashStack, cashStackPivot, cashYOffset, false);
+        UpdateDynamicStackMovement(cashStack, cashStackPivot, cashYOffset, true);
     }
 
     private void UpdateDynamicStackMovement(List<GameObject> items, Transform rootPivot, float itemYOffset, bool applyCurve)
@@ -210,10 +235,12 @@ public sealed class StackManager : MonoBehaviour
         if (rootPivot == null || itemCount == 0) return;
 
         float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
-        float speedRatio = Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
-        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : Vector3.zero;
+        float speedRatio = isStopBounceActive
+            ? cachedBaseBendSpeedRatio
+            : Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
+        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : lastBendDirWorld;
 
-        float lerpAmount = Time.deltaTime * FollowSpeed;
+        float lerpAmount = Time.deltaTime * stackFollowLerp;
 
         for (int i = 0; i < itemCount; i++)
         {
@@ -225,12 +252,15 @@ public sealed class StackManager : MonoBehaviour
 
             Vector3 targetPos = target.position + (Vector3.up * itemYOffset);
 
-            if (applyCurve && itemCount > 2)
+            if (applyCurve && itemCount > 1)
             {
-                float t = i / (float)(itemCount - 1);
-                float centerProfile = 4f * t * (1f - t);
-                Vector3 curveOffset = backDir * (curveBackMaxOffset * speedRatio * centerProfile);
-                targetPos += curveOffset;
+                // Keep all items aligned in one direction so the stack behaves like a single bent rod.
+                float t = (i + 1f) / itemCount;
+                float bendProfile = Mathf.Pow(t, Mathf.Max(1f, rodBendExponent));
+                float baseBend = rodBendMaxOffset * speedRatio * bendProfile;
+                float bounceBend = stopBounceBendOffsetAmount * bendProfile;
+                Vector3 bendOffset = backDir * (baseBend + bounceBend);
+                targetPos += bendOffset;
             }
 
             current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
@@ -324,11 +354,19 @@ public sealed class StackManager : MonoBehaviour
         float speed = velocity.magnitude;
         bool isMoving = speed > SwayVelocityThreshold;
 
-        smoothedHorizontalVelocityWorld = Vector3.Lerp(smoothedHorizontalVelocityWorld, velocity, Time.deltaTime * curveVelocityLerp);
+        float velocityLerp = rodBendVelocityLerp > 0f ? rodBendVelocityLerp : curveVelocityLerp;
+        smoothedHorizontalVelocityWorld = Vector3.Lerp(smoothedHorizontalVelocityWorld, velocity, Time.deltaTime * velocityLerp);
+        if (smoothedHorizontalVelocityWorld.sqrMagnitude > 0.0001f)
+        {
+            lastBendDirWorld = -smoothedHorizontalVelocityWorld.normalized;
+        }
 
         if (isMoving)
         {
             KillCarrySwayTween();
+            KillStopBounceTween();
+            stopBounceBendOffsetAmount = 0f;
+            isStopBounceActive = false;
 
             Vector3 localVelocity = transform.InverseTransformDirection(velocity);
             localVelocity.y = 0f;
@@ -342,8 +380,15 @@ public sealed class StackManager : MonoBehaviour
             Vector3 targetOffset = swayDirectionLocal * (swayMaxOffset * speedRatio);
             currentSwayLocalOffset = Vector3.Lerp(currentSwayLocalOffset, targetOffset, Time.deltaTime * swayMoveLerp);
             ApplyCarrySwayOffset();
+            wasMovingLastFrame = true;
             return;
         }
+
+        if (wasMovingLastFrame && lastBendDirWorld.sqrMagnitude > 0.0001f)
+        {
+            StartStopBounce();
+        }
+        wasMovingLastFrame = false;
 
         if (currentSwayLocalOffset.sqrMagnitude <= 0.000001f)
         {
@@ -370,6 +415,38 @@ public sealed class StackManager : MonoBehaviour
             .SetLink(gameObject, LinkBehaviour.KillOnDisable)
             .OnComplete(() => swayReturnTween = null);
     }
+
+    private void StartStopBounce()
+    {
+        KillStopBounceTween();
+
+        if (stopBounceBendAmount <= 0f || stopBounceDuration <= 0f || stopBounceOscillations <= 0f)
+        {
+            stopBounceBendOffsetAmount = 0f;
+            isStopBounceActive = false;
+            return;
+        }
+
+        isStopBounceActive = true;
+        float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
+        cachedBaseBendSpeedRatio = Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
+        stopBounceBendOffsetAmount = 0f;
+
+        stopBounceTween = DOVirtual.Float(0f, 1f, stopBounceDuration, t =>
+            {
+                float oscillation = Mathf.Sin(t * Mathf.PI * 2f * stopBounceOscillations);
+                float damping = Mathf.Exp(-Mathf.Max(0f, stopBounceDamping) * t);
+                stopBounceBendOffsetAmount = oscillation * damping * stopBounceBendAmount;
+            })
+            .SetEase(Ease.OutQuad)
+            .SetLink(gameObject, LinkBehaviour.KillOnDisable)
+            .OnComplete(() =>
+            {
+                stopBounceBendOffsetAmount = 0f;
+                isStopBounceActive = false;
+            });
+    }
+
     private void ApplyCarrySwayOffset()
     {
         Vector3 worldSwayOffset = transform.TransformVector(currentSwayLocalOffset);
@@ -404,5 +481,13 @@ public sealed class StackManager : MonoBehaviour
         if (swayReturnTween == null) return;
         if (swayReturnTween.IsActive()) swayReturnTween.Kill();
         swayReturnTween = null;
+    }
+
+    private void KillStopBounceTween()
+    {
+        if (stopBounceTween == null) return;
+        if (stopBounceTween.IsActive()) stopBounceTween.Kill();
+        stopBounceTween = null;
+        isStopBounceActive = false;
     }
 }

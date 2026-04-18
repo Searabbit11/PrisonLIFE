@@ -23,6 +23,12 @@ public sealed class CriminalManager : MonoBehaviour
     [SerializeField] private TMP_Text capacityText;
     [SerializeField] private int maxCapacity = 20;
     [SerializeField] private GameObject upgradeZone;
+    [SerializeField] private Transform prisonRootForPunch;
+    [SerializeField] private Color normalCapacityColor = Color.white;
+    [SerializeField] private Color fullCapacityColor = Color.red;
+    [SerializeField] private float fullPunchStrength = 0.18f;
+    [SerializeField] private float fullPunchDuration = 0.35f;
+    [SerializeField] private float fullPunchDelayAfterFocus = 0f;
 
     private readonly List<Criminal> criminalQueue = new List<Criminal>();
     private readonly Dictionary<Transform, bool> slotOccupancy = new Dictionary<Transform, bool>();
@@ -30,6 +36,9 @@ public sealed class CriminalManager : MonoBehaviour
     private int currentPrisonerCount;
     private float nextSpawnCheckTime;
     private bool hasNotifiedFull;
+    private bool isCapacityFullState;
+    private bool pendingFullCapacityFeedback;
+    private float pendingFullFeedbackPlayTime = -1f;
 
     private void Awake()
     {
@@ -41,6 +50,10 @@ public sealed class CriminalManager : MonoBehaviour
         }
 
         InitializePrisonSlots();
+        if (capacityText != null)
+        {
+            normalCapacityColor = capacityText.color;
+        }
         UpdateCapacityUI();
     }
 
@@ -50,6 +63,28 @@ public sealed class CriminalManager : MonoBehaviour
         {
             SpawnCriminal();
             nextSpawnCheckTime = Time.time + spawnCheckInterval;
+        }
+
+        if (pendingFullCapacityFeedback)
+        {
+            if (CameraController.Instance == null || CameraController.Instance.IsFocusing == false)
+            {
+                if (pendingFullFeedbackPlayTime < 0f)
+                {
+                    pendingFullFeedbackPlayTime = Time.time + Mathf.Max(0f, fullPunchDelayAfterFocus);
+                }
+
+                if (Time.time >= pendingFullFeedbackPlayTime)
+                {
+                    pendingFullCapacityFeedback = false;
+                    pendingFullFeedbackPlayTime = -1f;
+                    PlayFullCapacityFeedback();
+                }
+            }
+            else
+            {
+                pendingFullFeedbackPlayTime = -1f;
+            }
         }
     }
 
@@ -78,7 +113,54 @@ public sealed class CriminalManager : MonoBehaviour
         if (capacityText != null)
         {
             capacityText.text = $"{currentPrisonerCount}/{maxCapacity}";
+
+            bool isCurrentlyFull = currentPrisonerCount >= maxCapacity;
+
+            if (isCurrentlyFull)
+            {
+                capacityText.color = fullCapacityColor;
+
+                if (!isCapacityFullState)
+                {
+                    isCapacityFullState = true;
+                    TryPlayFullCapacityFeedback();
+                }
+            }
+            else
+            {
+                capacityText.color = normalCapacityColor;
+                isCapacityFullState = false;
+                pendingFullCapacityFeedback = false;
+                pendingFullFeedbackPlayTime = -1f;
+            }
         }
+    }
+
+    private void TryPlayFullCapacityFeedback()
+    {
+        if (CameraController.Instance != null && CameraController.Instance.IsFocusing)
+        {
+            pendingFullCapacityFeedback = true;
+            pendingFullFeedbackPlayTime = -1f;
+            return;
+        }
+
+        if (fullPunchDelayAfterFocus > 0f)
+        {
+            pendingFullCapacityFeedback = true;
+            pendingFullFeedbackPlayTime = Time.time + fullPunchDelayAfterFocus;
+            return;
+        }
+
+        PlayFullCapacityFeedback();
+    }
+
+    private void PlayFullCapacityFeedback()
+    {
+        if (prisonRootForPunch == null) return;
+
+        prisonRootForPunch.DOKill(true);
+        prisonRootForPunch.DOPunchScale(Vector3.one * fullPunchStrength, fullPunchDuration);
     }
 
     public void UpgradeCapacity(int newMax, Transform[] newSlots)

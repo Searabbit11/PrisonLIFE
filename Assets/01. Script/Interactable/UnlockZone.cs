@@ -39,6 +39,7 @@ public sealed class UnlockZone : MonoBehaviour
     [Header("Animation")]
     [SerializeField] private float consumeInterval = 0.1f;
     [SerializeField] private float jumpPower = 2f;
+    [SerializeField] private Transform cashAbsorbPoint;
     public bool hideOnCompleteWithAnimation = false;
 
     [Header("Upgrade Settings")]
@@ -155,7 +156,8 @@ public sealed class UnlockZone : MonoBehaviour
                     cash.transform.DOKill();
                     cash.transform.SetParent(null);
 
-                    cash.transform.DOJump(transform.position, jumpPower, 1, 0.4f)
+                    Vector3 absorbTargetPosition = GetCashAbsorbPosition(playerStack);
+                    cash.transform.DOJump(absorbTargetPosition, jumpPower, 1, 0.4f)
                         .SetEase(Ease.InQuad)
                         .OnComplete(() =>
                         {
@@ -342,6 +344,22 @@ public sealed class UnlockZone : MonoBehaviour
             if (IsSceneObject(stageObject) == false || stageObject == gameObject) continue;
             stageObject.SetActive(false);
         }
+    }
+
+    private Vector3 GetCashAbsorbPosition(StackManager playerStack)
+    {
+        if (cashAbsorbPoint != null)
+        {
+            return cashAbsorbPoint.position;
+        }
+
+        if (zoneCollider != null)
+        {
+            // Collider center follows the actual trigger location even when root transform is offset.
+            return zoneCollider.bounds.center;
+        }
+
+        return transform.position;
     }
 
     private bool HasCurrentStage()

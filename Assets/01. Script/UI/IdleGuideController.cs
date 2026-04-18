@@ -11,6 +11,7 @@ public sealed class IdleGuideController : MonoBehaviour
     [Header("Idle Settings")]
     [SerializeField] private float idleDelay = 3f;
     [SerializeField] private float joystickDeadZoneSqr = 0.0025f; // 0.05 * 0.05
+    [SerializeField] private bool showOnGameStart = true;
 
     [Header("Block Conditions")]
     [SerializeField] private bool hideWhileCameraFocusing = true;
@@ -30,7 +31,7 @@ public sealed class IdleGuideController : MonoBehaviour
     private void Start()
     {
         ConfigureGuideRaycastBlocking();
-        lastInputTime = Time.time;
+        lastInputTime = showOnGameStart ? Time.time - idleDelay : Time.time;
         SetGuideVisible(false);
     }
 
