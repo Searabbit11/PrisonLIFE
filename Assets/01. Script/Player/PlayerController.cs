@@ -8,7 +8,7 @@ public sealed class PlayerController : MonoBehaviour
     private static readonly int IsMining = Animator.StringToHash("IsMining");
     private static readonly int IsDrill = Animator.StringToHash("IsDrill");
     private const float RotationSpeed = 15f;
-    private const float SnappingAngle = 45f;
+    private const float InputDeadZoneSqr = 0.0025f; // 0.05 * 0.05
     private const int MaxMiningHits = 32;
 
     [SerializeField] private FloatingJoystick joystick;
@@ -38,6 +38,7 @@ public sealed class PlayerController : MonoBehaviour
     private EquipmentManager equipmentManager;
     private Camera mainCam;
     private Vector3 moveDirection = Vector3.zero;
+    private float moveInputStrength;
     private bool isMiningState;
 
     private readonly Collider[] miningHitBuffer = new Collider[MaxMiningHits];
@@ -129,28 +130,30 @@ public sealed class PlayerController : MonoBehaviour
         if (CameraController.Instance != null && CameraController.Instance.IsFocusing)
         {
             moveDirection = Vector3.zero;
+            moveInputStrength = 0f;
             SetMiningState(false);
             return;
         }
 
-        if (joystick == null || joystick.Direction.sqrMagnitude < 0.0025f) // 0.05 * 0.05
+        if (joystick == null || joystick.Direction.sqrMagnitude < InputDeadZoneSqr)
         {
             moveDirection = Vector3.zero;
+            moveInputStrength = 0f;
             return;
         }
 
         Vector2 input = joystick.Direction;
         float cameraYaw = mainCam != null ? mainCam.transform.eulerAngles.y : 0f;
-        float inputAngle = Mathf.Atan2(input.x, input.y) * Mathf.Rad2Deg;
-        float snappedAngle = Mathf.Round(inputAngle / SnappingAngle) * SnappingAngle;
+        Vector3 localInputDirection = new Vector3(input.x, 0f, input.y);
+        moveInputStrength = Mathf.Clamp01(localInputDirection.magnitude);
 
-        moveDirection = Quaternion.Euler(0f, snappedAngle + cameraYaw, 0f) * Vector3.forward;
+        moveDirection = (Quaternion.Euler(0f, cameraYaw, 0f) * localInputDirection).normalized;
     }
 
     private void HandleMovement()
     {
         if (moveDirection == Vector3.zero) return;
-        transform.position += moveDirection * (movementSpeed * Time.deltaTime);
+        transform.position += moveDirection * (movementSpeed * moveInputStrength * Time.deltaTime);
     }
 
     private void HandleRotation()
@@ -165,7 +168,7 @@ public sealed class PlayerController : MonoBehaviour
     {
         if (animator == null) return;
 
-        animator.SetFloat(Speed, moveDirection == Vector3.zero ? 0f : 1f);
+        animator.SetFloat(Speed, moveInputStrength);
         if (equipmentManager != null)
         {
             animator.SetBool(IsDrill, equipmentManager.IsDrillEquipped);

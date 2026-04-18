@@ -409,8 +409,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40
-  m_fontSizeBase: 40
+  m_fontSize: 35
+  m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -1083,8 +1083,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -15}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -24.8, y: -0.3}
-  m_SizeDelta: {x: 60.97, y: 53.345}
+  m_AnchoredPosition: {x: -17.47, y: 0.41}
+  m_SizeDelta: {x: 48.05, y: 42.04}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &52240561104129707
 CanvasRenderer:
@@ -2245,8 +2245,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -2.37, y: -3.47}
-  m_SizeDelta: {x: 117.97, y: 68.07}
+  m_AnchoredPosition: {x: 0, y: -11.01}
+  m_SizeDelta: {x: 91.85, y: 53}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3736176296292363754
 CanvasRenderer:
@@ -3141,6 +3141,7 @@ MonoBehaviour:
   exitRotationAngle: 180
   minRequiredHandcuffs: 2
   maxRequiredHandcuffs: 4
+  arrestDelayAfterZero: 0.2
 --- !u!54 &2986090614329671826
 Rigidbody:
   m_ObjectHideFlags: 0
