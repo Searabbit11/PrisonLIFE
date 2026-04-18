@@ -13,6 +13,9 @@ public sealed class PlayerController : MonoBehaviour
 
     [SerializeField] private FloatingJoystick joystick;
     [SerializeField] private float movementSpeed = 5f;
+    [Header("Collision Move Settings")]
+    [SerializeField] private LayerMask movementCollisionMask = ~0;
+    [SerializeField] private float collisionSkin = 0.02f;
 
     [Header("Mining Settings")]
     [SerializeField] private Vector3 baseMiningDetectionBoxSize = new Vector3(2f, 3f, 2f);
@@ -39,6 +42,7 @@ public sealed class PlayerController : MonoBehaviour
     private Camera mainCam;
     private Vector3 moveDirection = Vector3.zero;
     private bool isMiningState;
+    private CapsuleCollider movementCapsule;
 
     private readonly Collider[] miningHitBuffer = new Collider[MaxMiningHits];
     private readonly ResourceNode[] miningNodeBuffer = new ResourceNode[MaxMiningHits];
@@ -77,6 +81,7 @@ public sealed class PlayerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.isKinematic = true;
+        movementCapsule = GetComponent<CapsuleCollider>();
         stackManager = GetComponent<StackManager>();
         equipmentManager = GetComponent<EquipmentManager>();
         mainCam = Camera.main;
@@ -175,7 +180,104 @@ public sealed class PlayerController : MonoBehaviour
     private void HandleMovement()
     {
         if (moveDirection == Vector3.zero) return;
-        transform.position += moveDirection * (movementSpeed * Time.deltaTime);
+
+        Vector3 desiredMove = moveDirection * (movementSpeed * Time.deltaTime);
+        MoveWithCollisionCast(desiredMove);
+    }
+
+    private void MoveWithCollisionCast(Vector3 desiredMove)
+    {
+        if (desiredMove.sqrMagnitude <= 0.000001f) return;
+
+        if (movementCapsule == null)
+        {
+            transform.position += desiredMove;
+            return;
+        }
+
+        // 2-step sweep: first move toward input, then slide on the hit surface.
+        Vector3 remainingMove = desiredMove;
+        for (int i = 0; i < 2; i++)
+        {
+            float distance = remainingMove.magnitude;
+            if (distance <= 0.0001f) break;
+
+            Vector3 direction = remainingMove / distance;
+            if (!CapsuleCast(direction, distance, out var hit))
+            {
+                transform.position += remainingMove;
+                break;
+            }
+
+            float moveDistance = Mathf.Max(0f, hit.distance - collisionSkin);
+            if (moveDistance > 0f)
+            {
+                transform.position += direction * moveDistance;
+            }
+
+            float leftDistance = Mathf.Max(0f, distance - moveDistance);
+            Vector3 slideDirection = Vector3.ProjectOnPlane(direction, hit.normal);
+            if (leftDistance <= 0.0001f || slideDirection.sqrMagnitude <= 0.0001f) break;
+
+            remainingMove = slideDirection.normalized * leftDistance;
+        }
+    }
+
+    private bool CapsuleCast(Vector3 direction, float distance, out RaycastHit hit)
+    {
+        GetCapsuleWorld(out var pointA, out var pointB, out var radius);
+        float castRadius = Mathf.Max(0.001f, radius - (collisionSkin * 0.5f));
+        return Physics.CapsuleCast(
+            pointA,
+            pointB,
+            castRadius,
+            direction,
+            out hit,
+            distance + collisionSkin,
+            movementCollisionMask,
+            QueryTriggerInteraction.Ignore);
+    }
+
+    private void GetCapsuleWorld(out Vector3 pointA, out Vector3 pointB, out float radius)
+    {
+        Vector3 lossy = transform.lossyScale;
+        float absX = Mathf.Abs(lossy.x);
+        float absY = Mathf.Abs(lossy.y);
+        float absZ = Mathf.Abs(lossy.z);
+
+        Vector3 center = transform.TransformPoint(movementCapsule.center);
+        int axis = movementCapsule.direction;
+
+        Vector3 axisDir;
+        float axisScale;
+        float radiusScale;
+
+        if (axis == 0)
+        {
+            axisDir = transform.right;
+            axisScale = absX;
+            radiusScale = Mathf.Max(absY, absZ);
+        }
+        else if (axis == 2)
+        {
+            axisDir = transform.forward;
+            axisScale = absZ;
+            radiusScale = Mathf.Max(absX, absY);
+        }
+        else
+        {
+            axisDir = transform.up;
+            axisScale = absY;
+            radiusScale = Mathf.Max(absX, absZ);
+        }
+
+        radius = movementCapsule.radius * radiusScale;
+        float height = movementCapsule.height * axisScale;
+        float halfSegment = Mathf.Max(0f, (height * 0.5f) - radius);
+        Vector3 offset = axisDir.normalized * halfSegment;
+
+        pointA = center + offset;
+        pointB = center - offset;
     }
 
     private void HandleRotation()
