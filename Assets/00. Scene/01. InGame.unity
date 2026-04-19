@@ -16998,6 +16998,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 903372279809390747, guid: 9cca3b6812858404b99eaa88a9384837,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2.25
+      objectReference: {fileID: 0}
     - target: {fileID: 977346383650450615, guid: 9cca3b6812858404b99eaa88a9384837,
         type: 3}
       propertyPath: zoneRenderer
@@ -17077,6 +17082,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 9
+      objectReference: {fileID: 0}
+    - target: {fileID: 7676051423068351413, guid: 9cca3b6812858404b99eaa88a9384837,
+        type: 3}
+      propertyPath: ingotHeatFlashHoldDuration
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 7676051423068351413, guid: 9cca3b6812858404b99eaa88a9384837,
+        type: 3}
+      propertyPath: ingotHeatFlashReturnDuration
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: 8657542734033506200, guid: 9cca3b6812858404b99eaa88a9384837,
         type: 3}

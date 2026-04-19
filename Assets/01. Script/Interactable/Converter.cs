@@ -5,6 +5,8 @@ using UnityEngine;
 public sealed class Converter : MonoBehaviour
 {
     public static Converter Instance { get; private set; }
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
 
     [Header("Process Points")]
     [SerializeField] private Transform rawOreStackPivot;
@@ -24,6 +26,11 @@ public sealed class Converter : MonoBehaviour
 
     [Header("Visuals")]
     [SerializeField] private Transform customCubePress;
+    [SerializeField] private bool playIngotHeatFlash = true;
+    [SerializeField] private Color ingotHeatColor = new Color(1f, 0.25f, 0.25f, 1f);
+    [SerializeField] private float ingotHeatFlashToHotDuration = 0.1f;
+    [SerializeField] private float ingotHeatFlashReturnDuration = 0.22f;
+    [SerializeField] private float ingotHeatFlashHoldDuration = 0.03f;
 
     [Header("Settings")]
     [SerializeField] private float receiveCooldown = 0.1f;
@@ -54,6 +61,7 @@ public sealed class Converter : MonoBehaviour
     private float nextReceiveTime;
     private float nextProcessTime;
     private Camera cachedCamera;
+    private MaterialPropertyBlock colorPropertyBlock;
 
     private void Awake()
     {
@@ -65,6 +73,7 @@ public sealed class Converter : MonoBehaviour
         }
 
         cachedCamera = Camera.main;
+        colorPropertyBlock = new MaterialPropertyBlock();
     }
 
     private void Update()
@@ -228,6 +237,7 @@ public sealed class Converter : MonoBehaviour
     {
         GameObject ingot = PoolManager.Instance.SpawnFromPool("Ingot", beltStartPoint.position, Quaternion.Euler(ingotSpawnRotation));
         if (ingot == null) return;
+        PlayIngotHeatFlash(ingot);
 
         Sequence seq = DOTween.Sequence();
         seq.Append(ingot.transform.DOMove(pressPoint.position, moveDuration).SetEase(Ease.Linear));
@@ -286,5 +296,71 @@ public sealed class Converter : MonoBehaviour
 
             producedHandcuffs.Add(handcuff);
         });
+    }
+
+    private void PlayIngotHeatFlash(GameObject ingot)
+    {
+        if (playIngotHeatFlash == false || ingot == null) return;
+
+        Renderer[] renderers = ingot.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer renderer = renderers[i];
+            if (TryGetRendererBaseColor(renderer, out int colorPropertyId, out Color originalColor) == false) continue;
+
+            renderer.GetPropertyBlock(colorPropertyBlock);
+            colorPropertyBlock.SetColor(colorPropertyId, originalColor);
+            renderer.SetPropertyBlock(colorPropertyBlock);
+
+            Sequence flashSeq = DOTween.Sequence().SetTarget(ingot);
+            flashSeq.Append(DOTween.To(
+                () => 0f,
+                t => SetRendererColor(renderer, colorPropertyId, Color.Lerp(originalColor, ingotHeatColor, t)),
+                1f,
+                Mathf.Max(0.01f, ingotHeatFlashToHotDuration)));
+            if (ingotHeatFlashHoldDuration > 0f)
+            {
+                flashSeq.AppendInterval(ingotHeatFlashHoldDuration);
+            }
+            flashSeq.Append(DOTween.To(
+                () => 0f,
+                t => SetRendererColor(renderer, colorPropertyId, Color.Lerp(ingotHeatColor, originalColor, t)),
+                1f,
+                Mathf.Max(0.01f, ingotHeatFlashReturnDuration)));
+            flashSeq.OnComplete(() => SetRendererColor(renderer, colorPropertyId, originalColor));
+        }
+    }
+
+    private bool TryGetRendererBaseColor(Renderer renderer, out int colorPropertyId, out Color color)
+    {
+        colorPropertyId = -1;
+        color = Color.white;
+        if (renderer == null || renderer.sharedMaterial == null) return false;
+
+        Material shared = renderer.sharedMaterial;
+        if (shared.HasProperty(BaseColorId))
+        {
+            colorPropertyId = BaseColorId;
+        }
+        else if (shared.HasProperty(ColorId))
+        {
+            colorPropertyId = ColorId;
+        }
+        else
+        {
+            return false;
+        }
+
+        color = shared.GetColor(colorPropertyId);
+        return true;
+    }
+
+    private void SetRendererColor(Renderer renderer, int colorPropertyId, Color color)
+    {
+        if (renderer == null) return;
+
+        renderer.GetPropertyBlock(colorPropertyBlock);
+        colorPropertyBlock.SetColor(colorPropertyId, color);
+        renderer.SetPropertyBlock(colorPropertyBlock);
     }
 }
