@@ -20,14 +20,14 @@ public sealed class ResourceNode : MonoBehaviour
 
     private int currentHp;
     private bool isDestroyed;
-    private WaitForSeconds respawnWait; // 캐싱용 변수 추가
+    private WaitForSeconds respawnWait; // 罹먯떛??蹂??異붽?
 
     public bool IsMineable => isActiveAndEnabled == true && isDestroyed == false;
 
     private void Awake()
     {
         currentHp = maxHp;
-        respawnWait = new WaitForSeconds(respawnTime); // 미리 생성하여 재사용
+        respawnWait = new WaitForSeconds(respawnTime);
         if (nodeCollider == null) nodeCollider = GetComponent<Collider>();
     }
 
@@ -74,43 +74,32 @@ public sealed class ResourceNode : MonoBehaviour
 
     private void DieForPlayer(StackManager playerStack)
     {
-        SetDestroyedVisualState();
-
-        if (playerStack.IsFull == false)
-        {
-            playerStack.AddOre(orePrefab);
-        }
-
+        HandleDeath();
+        if (playerStack.IsFull == false) playerStack.AddOre(orePrefab);
         GuideManager.Instance.OnOreMined();
-
-        StartCoroutine(RespawnRoutine());
     }
 
     private GameObject DieForNpc()
     {
-        SetDestroyedVisualState();
-
-        GameObject droppedOre = null;
-        if (orePrefab != null)
-        {
-            Vector3 dropPosition = spawnPoint != null ? spawnPoint.position : transform.position;
-            droppedOre = PoolManager.Instance.SpawnFromPool("Ore", dropPosition, Quaternion.identity);
-        }
-
-        StartCoroutine(RespawnRoutine());
-        return droppedOre;
+        HandleDeath();
+        if (orePrefab == null) return null;
+        Vector3 dropPosition = spawnPoint != null ? spawnPoint.position : transform.position;
+        return PoolManager.Instance.SpawnFromPool("Ore", dropPosition, Quaternion.identity);
     }
 
-    private void SetDestroyedVisualState()
+    private void HandleDeath()
     {
         isDestroyed = true;
         if (nodeCollider != null) nodeCollider.enabled = false;
         if (visualModel != null) visualModel.SetActive(false);
+        StartCoroutine(RespawnRoutine());
     }
+
+    private void SetDestroyedVisualState() { }
 
     private IEnumerator RespawnRoutine()
     {
-        yield return respawnWait; // 캐싱된 변수 사용
+        yield return respawnWait; // 罹먯떛??蹂???ъ슜
         ResetNode();
     }
 
@@ -127,3 +116,4 @@ public sealed class ResourceNode : MonoBehaviour
         visualModel.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
     }
 }
+

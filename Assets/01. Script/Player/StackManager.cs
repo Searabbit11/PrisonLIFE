@@ -83,7 +83,7 @@ public sealed class StackManager : MonoBehaviour
 
     public void SetUseSway(bool use)
     {
-        InitializeBasePositions(); // ?ÑÏπò Ï¥àÍ∏∞??Î≥¥Ïû•
+        InitializeBasePositions(); 
         useSway = use;
         if (!useSway)
         {
@@ -112,7 +112,6 @@ public sealed class StackManager : MonoBehaviour
 
     private void Start()
     {
-        // basePos Ï¥àÍ∏∞?îÎäî Awake?êÏÑú ?òÌñâ??
         ApplyCarrySwayOffset();
     }
 
@@ -130,10 +129,7 @@ public sealed class StackManager : MonoBehaviour
         KillCarrySwayTween();
         KillStopBounceTween();
     }
-
-    /// <summary>
-    /// ?∏Î??êÏÑú ?∏Ï∂ú ??Ï¶âÏãú ?????§ÌÉù??Í¥ëÏÑù??Ï∂îÍ??©Îãà??
-    /// </summary>
+    
     public void AddOre(GameObject orePrefab)
     {
         if (IsFull == true)
@@ -142,22 +138,19 @@ public sealed class StackManager : MonoBehaviour
             return;
         }
 
-        // PoolManager?êÏÑú Í¥ëÏÑù??Í∞Ä?∏Ïòµ?àÎã§.
+        
         GameObject ore = PoolManager.Instance.SpawnFromPool("Ore", stackPivot.position, Quaternion.identity);
         if (ore == null) return;
 
         Transform oreTransform = ore.transform;
-        // ?ùÏÑ±??Í¥ëÏÑù??Î∂ÄÎ™®Î? ?åÎ†à?¥Ïñ¥???§ÌÉù ?ºÎ≤ó?ºÎ°ú ?§Ï†ï?©Îãà??
         oreTransform.SetParent(stackPivot);
         
-        // ?ùÏÑ± ???ÑÏπòÎ•?ÎßàÏ?Îß??ÑÏù¥???êÎäî ?ºÎ≤ó) Í∑ºÏ≤òÎ°??§Ï†ï?òÏó¨ ?úÍ∞Ñ?¥Îèô Î∞©Ï?
         Vector3 startPos = stackedItems.Count == 0 ? stackPivot.position : stackedItems[^1].position;
         oreTransform.position = startPos + Vector3.up * yOffset;
         
         stackedItems.Add(oreTransform);
         GuideManager.Instance.OnOreCountChanged(OreCount);
-
-        // Îæ?Pop) ?∞Ï∂ú: 0 -> 1.2 -> 1.0
+        
         oreTransform.localScale = Vector3.zero;
         oreTransform.DOScale(1.2f, 0.15f).SetEase(Ease.OutBack).OnComplete(() =>
         {
@@ -168,102 +161,66 @@ public sealed class StackManager : MonoBehaviour
     private void Update()
     {
         if (useSway) UpdateCarrySway();
-        UpdateStackMovement();
-        UpdateHandcuffStackMovement();
-        UpdateCashStackMovement();
+        
+        float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
+        float speedRatio = isStopBounceActive
+            ? cachedBaseBendSpeedRatio
+            : Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
+        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : lastBendDirWorld;
+        float lerpAmount = Time.deltaTime * stackFollowLerp;
+
+        UpdateDynamicStackMovement(stackedItems, stackPivot, yOffset, true, backDir, speedRatio, lerpAmount);
+        UpdateDynamicStackMovement(handcuffItems, handcuffStackPivot, handcuffYOffset, true, backDir, speedRatio, lerpAmount);
+        UpdateDynamicStackMovement(cashStack, cashStackPivot, cashYOffset, true, backDir, speedRatio, lerpAmount);
     }
+
+    private void UpdateDynamicStackMovement<T>(List<T> items, Transform rootPivot, float itemYOffset, bool applyCurve, Vector3 backDir, float speedRatio, float lerpAmount) where T : Object
+    {
+        int itemCount = items.Count;
+        if (rootPivot == null || itemCount == 0) return;
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            Transform current = GetItemTransform(items[i]);
+            if (current == null) continue;
+
+            Transform target = i == 0 ? rootPivot : GetItemTransform(items[i - 1]);
+            if (target == null) continue;
+
+            Vector3 targetPos = target.position + (Vector3.up * itemYOffset);
+
+            if (applyCurve && itemCount > 1)
+            {
+                float t = (i + 1f) / itemCount;
+                float bendProfile = Mathf.Pow(t, Mathf.Max(1f, rodBendExponent));
+                float baseBend = rodBendMaxOffset * speedRatio * bendProfile;
+                float bounceBend = stopBounceBendOffsetAmount * bendProfile;
+                targetPos += backDir * (baseBend + bounceBend);
+            }
+
+            current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
+            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, lerpAmount);
+        }
+    }
+
+    private static Transform GetItemTransform<T>(T item) where T : Object
+    {
+        if (item == null) return null;
+        if (item is Component component) return component.transform;
+        if (item is GameObject gameObject) return gameObject.transform;
+        return null;
+    }
+
+    private void UpdateStackMovement() { }
+    private void UpdateHandcuffStackMovement() { }
+    private void UpdateCashStackMovement() { }
+    private void UpdateDynamicStackMovement(List<GameObject> items, Transform rootPivot, float itemYOffset, bool applyCurve) { }
 
     public void ShowMaxEffect()
     {
         if (floatingText != null)
         {
             floatingText.Show("MAX");
-        }
-    }
-    
-    // Í∞?Í¥ëÏÑù???ûÏÑ† ?§Î∏å?ùÌä∏Î•??∞ÎùºÍ∞ÄÎ©?Î∂Ä?úÎüΩÍ≤??òÏñ¥ÏßÄ?ÑÎ°ù Í≥ÑÏÇ∞
-    private void UpdateStackMovement()
-    {
-        int stackCount = stackedItems.Count;
-        if (stackCount == 0) return;
-
-        float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
-        float speedRatio = isStopBounceActive
-            ? cachedBaseBendSpeedRatio
-            : Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
-        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : lastBendDirWorld;
-
-        float lerpAmount = Time.deltaTime * stackFollowLerp;
-
-        for (int i = 0; i < stackCount; i++)
-        {
-            Transform current = stackedItems[i];
-            Transform target = (i == 0) ? stackPivot : stackedItems[i - 1];
-
-            Vector3 targetPos = target.position + (Vector3.up * yOffset);
-
-            if (stackCount > 1)
-            {
-                // Apply the same "single bent rod" profile used by handcuffs/cash.
-                float t = (i + 1f) / stackCount;
-                float bendProfile = Mathf.Pow(t, Mathf.Max(1f, rodBendExponent));
-                float baseBend = rodBendMaxOffset * speedRatio * bendProfile;
-                float bounceBend = stopBounceBendOffsetAmount * bendProfile;
-                Vector3 bendOffset = backDir * (baseBend + bounceBend);
-                targetPos += bendOffset;
-            }
-
-            current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
-            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, lerpAmount);
-        }
-    }
-
-    private void UpdateHandcuffStackMovement()
-    {
-        UpdateDynamicStackMovement(handcuffItems, handcuffStackPivot, handcuffYOffset, true);
-    }
-
-    private void UpdateCashStackMovement()
-    {
-        UpdateDynamicStackMovement(cashStack, cashStackPivot, cashYOffset, true);
-    }
-
-    private void UpdateDynamicStackMovement(List<GameObject> items, Transform rootPivot, float itemYOffset, bool applyCurve)
-    {
-        int itemCount = items.Count;
-        if (rootPivot == null || itemCount == 0) return;
-
-        float horizontalSpeed = smoothedHorizontalVelocityWorld.magnitude;
-        float speedRatio = isStopBounceActive
-            ? cachedBaseBendSpeedRatio
-            : Mathf.Clamp01(horizontalSpeed / Mathf.Max(0.01f, curveSpeedForMaxOffset));
-        Vector3 backDir = horizontalSpeed > SwayVelocityThreshold ? -smoothedHorizontalVelocityWorld.normalized : lastBendDirWorld;
-
-        float lerpAmount = Time.deltaTime * stackFollowLerp;
-
-        for (int i = 0; i < itemCount; i++)
-        {
-            GameObject currentObject = items[i];
-            if (currentObject == null) continue;
-
-            Transform current = currentObject.transform;
-            Transform target = (i == 0) ? rootPivot : items[i - 1].transform;
-
-            Vector3 targetPos = target.position + (Vector3.up * itemYOffset);
-
-            if (applyCurve && itemCount > 1)
-            {
-                // Keep all items aligned in one direction so the stack behaves like a single bent rod.
-                float t = (i + 1f) / itemCount;
-                float bendProfile = Mathf.Pow(t, Mathf.Max(1f, rodBendExponent));
-                float baseBend = rodBendMaxOffset * speedRatio * bendProfile;
-                float bounceBend = stopBounceBendOffsetAmount * bendProfile;
-                Vector3 bendOffset = backDir * (baseBend + bounceBend);
-                targetPos += bendOffset;
-            }
-
-            current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
-            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, lerpAmount);
         }
     }
 
@@ -275,7 +232,6 @@ public sealed class StackManager : MonoBehaviour
         stackedItems.RemoveAt(stackedItems.Count - 1);
         lastItem.DOKill();
         
-        // ?§ÌÉù?êÏÑú Îπ†Ï†∏?òÏôî?ºÎ?Î°?Î∂ÄÎ™?Í¥ÄÍ≥??¥Ï†ú
         lastItem.SetParent(null);
         if (SFXManager.Instance != null)
         {
@@ -287,10 +243,9 @@ public sealed class StackManager : MonoBehaviour
     #region Handcuff Stack Logic (Í∞Ä????
     public void PushHandcuff(GameObject handcuff)
     {
-        // Î∂ÄÎ™??§Ï†ï??ÏµúÏö∞?†ÏúºÎ°??òÌñâ?òÏó¨ Î°úÏª¨ Ï¢åÌëúÍ≥?Í∏∞Ï??êÏùÑ ?°Ïäµ?àÎã§.
         handcuff.transform.SetParent(handcuffStackPivot);
         
-        // Î¶¨Ïä§?∏Ïóê Ï∂îÍ?
+        // Î¶¨Ïä§?ÔøΩÏóê Ï∂îÔøΩ?
         handcuffItems.Add(handcuff);
         if (SFXManager.Instance != null)
         {
@@ -315,30 +270,24 @@ public sealed class StackManager : MonoBehaviour
 
     public Vector3 GetNextHandcuffPosition()
     {
-        // X, ZÏ∂??§ÌîÑ?ãÏùÑ ?úÍ±∞?òÍ≥† ?§ÏßÅ YÏ∂??§ÌÉù ?ÑÏπò(Î°úÏª¨ Ï¢åÌëú)Îß?Î∞òÌôò
         return new Vector3(0f, (handcuffItems.Count) * handcuffYOffset, 0f);
     }
     #endregion
 
-    #region Cash Stack Logic (????
+    #region Cash Stack Logic
     public void PushCash(GameObject cash)
     {
-        // 1. Í∏∞Ï°¥ ?∏Ïúà Ï¢ÖÎ£å Î∞?Î¨ºÎ¶¨ Ï∂©Îèå Î∞©Ï?
         cash.transform.DOKill();
         if (cash.TryGetComponent<Collider>(out var col)) col.enabled = false;
-
-        // 2. Î∂ÄÎ™??§Ï†ï Î∞?Î¶¨Ïä§??Ï∂îÍ?
+        
         cash.transform.SetParent(cashStackPivot);
         cashStack.Add(cash);
-
-        // 3. Î°úÏª¨ Î™©Ìëú ?ÑÏπò Í≥ÑÏÇ∞ (YÏ∂??ÅÏû¨)
+        
         Vector3 targetLocalPos = new Vector3(0, (cashStack.Count - 1) * cashYOffset, 0);
-
-        // 4. ?êÌîÑ ?∞Ï∂úÎ°??????ºÎ≤ó???àÏ∞©
+        
         cash.transform.DOLocalJump(targetLocalPos, 1.5f, 1, 0.4f).SetEase(Ease.OutQuad);
         cash.transform.DOLocalRotate(Vector3.zero, 0.4f);
-
-        // CurrencyManager ?∞Îèô: Î≥¥Ïú† Í∏àÏï° Ï¶ùÍ?
+        
         CurrencyManager.Instance.AddCash(1);
     }
 

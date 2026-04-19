@@ -78,14 +78,11 @@ public sealed class UnlockZone : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (HasCurrentStage() == false) return;
+        if (!other.CompareTag("Player") || !other.TryGetComponent<StackManager>(out var playerStack)) return;
+        if (TryClaimZone(playerStack) == false) return;
 
-        if (other.CompareTag("Player") && other.TryGetComponent<StackManager>(out var playerStack))
-        {
-            if (TryClaimZone(playerStack) == false) return;
-
-            if (unlockCoroutine != null) StopCoroutine(unlockCoroutine);
-            unlockCoroutine = StartCoroutine(UnlockRoutine(playerStack));
-        }
+        if (unlockCoroutine != null) StopCoroutine(unlockCoroutine);
+        unlockCoroutine = StartCoroutine(UnlockRoutine(playerStack));
     }
 
     private void OnTriggerStay(Collider other)

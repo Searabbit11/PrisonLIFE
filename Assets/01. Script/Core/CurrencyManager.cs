@@ -39,67 +39,57 @@ public sealed class CurrencyManager : MonoBehaviour
     {
         currentCash += amount;
         UpdateUI();
+        TryTriggerTutorial();
+    }
 
-        if (hasTutorialPlayed == false && currentCash > 0)
-        {
-            hasTutorialPlayed = true;
-            if (firstUnlockZone != null && cameraTargetPoint != null)
-            {
-                StartCoroutine(ShowTutorialSequence());
-            }
-        }
+    private void TryTriggerTutorial()
+    {
+        if (hasTutorialPlayed || currentCash <= 0 || firstUnlockZone == null || cameraTargetPoint == null) return;
+        
+        hasTutorialPlayed = true;
+        StartCoroutine(ShowTutorialSequence());
     }
 
     private IEnumerator ShowTutorialSequence()
     {
         if (mainCam == null)
         {
-            Debug.LogWarning("[CurrencyManager] Main Camera was not found. Skipping tutorial camera sequence.");
             if (firstUnlockZone != null) firstUnlockZone.SetActive(true);
             yield break;
         }
 
-        bool wasPlayerMovementEnabled = playerMovement != null && playerMovement.enabled;
+        // Disable Player & Camera Follow
+        bool wasPlayerEnabled = playerMovement != null && playerMovement.enabled;
         if (playerMovement != null)
         {
-            if (playerMovement is PlayerController pc)
-            {
-                pc.StopImmediately();
-            }
+            if (playerMovement is PlayerController pc) pc.StopImmediately();
             playerMovement.enabled = false;
         }
 
-        if (cameraFollowController == null)
-        {
-            cameraFollowController = mainCam.GetComponent<CameraController>();
-        }
-
-        bool wasCameraFollowEnabled = cameraFollowController != null && cameraFollowController.enabled;
+        if (cameraFollowController == null) cameraFollowController = mainCam.GetComponent<CameraController>();
+        bool wasCamFollowEnabled = cameraFollowController != null && cameraFollowController.enabled;
         if (cameraFollowController != null) cameraFollowController.enabled = false;
 
-        Transform camTransform = mainCam.transform;
-        Vector3 originalPos = camTransform.position;
-        Vector3 targetCameraPosition = cameraFollowController != null
-            ? cameraFollowController.GetCameraPositionForTarget(cameraTargetPoint.position)
+        // Sequence
+        Transform camTrans = mainCam.transform;
+        Vector3 originalPos = camTrans.position;
+        Vector3 targetPos = cameraFollowController != null 
+            ? cameraFollowController.GetCameraPositionForTarget(cameraTargetPoint.position) 
             : cameraTargetPoint.position;
 
-        camTransform.DOKill();
-        yield return camTransform.DOMove(targetCameraPosition, 1f).SetEase(Ease.InOutSine).WaitForCompletion();
+        camTrans.DOKill();
+        yield return camTrans.DOMove(targetPos, 1f).SetEase(Ease.InOutSine).WaitForCompletion();
 
-        if (firstUnlockZone != null)
-        {
-            firstUnlockZone.SetActive(true);
-            firstUnlockZone.transform.localScale = Vector3.zero;
-            firstUnlockZone.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack);
-        }
+        firstUnlockZone.SetActive(true);
+        firstUnlockZone.transform.localScale = Vector3.zero;
+        yield return firstUnlockZone.transform.DOScale(Vector3.one, 0.5f).SetEase(Ease.OutBack).WaitForCompletion();
 
         yield return new WaitForSeconds(1.5f);
 
-        camTransform.DOKill();
-        yield return camTransform.DOMove(originalPos, 1f).SetEase(Ease.InOutSine).WaitForCompletion();
+        yield return camTrans.DOMove(originalPos, 1f).SetEase(Ease.InOutSine).WaitForCompletion();
 
-        if (cameraFollowController != null) cameraFollowController.enabled = wasCameraFollowEnabled;
-        if (playerMovement != null) playerMovement.enabled = wasPlayerMovementEnabled;
+        if (cameraFollowController != null) cameraFollowController.enabled = wasCamFollowEnabled;
+        if (playerMovement != null) playerMovement.enabled = wasPlayerEnabled;
     }
 
     public void SpendCash(int amount)
