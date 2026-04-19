@@ -47,8 +47,10 @@ public sealed class PlayerController : MonoBehaviour
     private readonly Collider[] miningHitBuffer = new Collider[MaxMiningHits];
     private readonly ResourceNode[] miningNodeBuffer = new ResourceNode[MaxMiningHits];
     private WaitForSeconds drillHitWait;
+    private bool joystickSearchAttempted;
 
     public bool IsInMiningZone { get; set; }
+
 
     private Vector3 CurrentMiningDetectionBoxSize
     {
@@ -159,9 +161,17 @@ public sealed class PlayerController : MonoBehaviour
 
         if (joystick == null)
         {
-            joystick = FindFirstObjectByType<FloatingJoystick>();
-            moveDirection = Vector3.zero;
-            return;
+            if (!joystickSearchAttempted)
+            {
+                joystickSearchAttempted = true;
+                joystick = FindFirstObjectByType<FloatingJoystick>();
+            }
+
+            if (joystick == null)
+            {
+                moveDirection = Vector3.zero;
+                return;
+            }
         }
 
         if (joystick.Direction.sqrMagnitude < InputDeadZoneSqr)

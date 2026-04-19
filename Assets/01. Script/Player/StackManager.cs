@@ -174,17 +174,17 @@ public sealed class StackManager : MonoBehaviour
         UpdateDynamicStackMovement(cashStack, cashStackPivot, cashYOffset, true, backDir, speedRatio, lerpAmount);
     }
 
-    private void UpdateDynamicStackMovement<T>(List<T> items, Transform rootPivot, float itemYOffset, bool applyCurve, Vector3 backDir, float speedRatio, float lerpAmount) where T : Object
+    private void UpdateDynamicStackMovement(List<Transform> items, Transform rootPivot, float itemYOffset, bool applyCurve, Vector3 backDir, float speedRatio, float lerpAmount)
     {
         int itemCount = items.Count;
         if (rootPivot == null || itemCount == 0) return;
 
         for (int i = 0; i < itemCount; i++)
         {
-            Transform current = GetItemTransform(items[i]);
+            Transform current = items[i];
             if (current == null) continue;
 
-            Transform target = i == 0 ? rootPivot : GetItemTransform(items[i - 1]);
+            Transform target = i == 0 ? rootPivot : items[i - 1];
             if (target == null) continue;
 
             Vector3 targetPos = target.position + (Vector3.up * itemYOffset);
@@ -203,12 +203,34 @@ public sealed class StackManager : MonoBehaviour
         }
     }
 
-    private static Transform GetItemTransform<T>(T item) where T : Object
+    private void UpdateDynamicStackMovement(List<GameObject> items, Transform rootPivot, float itemYOffset, bool applyCurve, Vector3 backDir, float speedRatio, float lerpAmount)
     {
-        if (item == null) return null;
-        if (item is Component component) return component.transform;
-        if (item is GameObject gameObject) return gameObject.transform;
-        return null;
+        int itemCount = items.Count;
+        if (rootPivot == null || itemCount == 0) return;
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            GameObject currentObj = items[i];
+            if (currentObj == null) continue;
+
+            Transform current = currentObj.transform;
+            Transform target = i == 0 ? rootPivot : items[i - 1].transform;
+            if (target == null) continue;
+
+            Vector3 targetPos = target.position + (Vector3.up * itemYOffset);
+
+            if (applyCurve && itemCount > 1)
+            {
+                float t = (i + 1f) / itemCount;
+                float bendProfile = Mathf.Pow(t, Mathf.Max(1f, rodBendExponent));
+                float baseBend = rodBendMaxOffset * speedRatio * bendProfile;
+                float bounceBend = stopBounceBendOffsetAmount * bendProfile;
+                targetPos += backDir * (baseBend + bounceBend);
+            }
+
+            current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
+            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, lerpAmount);
+        }
     }
 
     private void UpdateStackMovement() { }

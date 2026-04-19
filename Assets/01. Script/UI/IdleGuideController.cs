@@ -19,14 +19,17 @@ public sealed class IdleGuideController : MonoBehaviour
 
     private float lastInputTime;
     private bool isGuideVisible;
+    private bool joystickSearchAttempted;
 
     private void Awake()
     {
         if (joystick == null)
         {
+            joystickSearchAttempted = true;
             joystick = FindFirstObjectByType<FloatingJoystick>();
         }
     }
+
 
     private void Start()
     {
@@ -62,8 +65,9 @@ public sealed class IdleGuideController : MonoBehaviour
 
     private bool HasAnyInput()
     {
-        if (joystick == null)
+        if (joystick == null && !joystickSearchAttempted)
         {
+            joystickSearchAttempted = true;
             joystick = FindFirstObjectByType<FloatingJoystick>();
         }
 
