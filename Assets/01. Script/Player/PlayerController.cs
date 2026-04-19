@@ -206,8 +206,7 @@ public sealed class PlayerController : MonoBehaviour
             transform.position += desiredMove;
             return;
         }
-
-        // 2-step sweep: first move toward input, then slide on the hit surface.
+        
         Vector3 remainingMove = desiredMove;
         for (int i = 0; i < 2; i++)
         {

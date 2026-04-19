@@ -101,7 +101,7 @@ public sealed class MinerNPC : MonoBehaviour
 
         nextMiningTime = Time.time + miningInterval;
 
-        GameObject droppedOre = targetNode.TakeDamageFromNpc(damage);
+        GameObject droppedOre = targetNode.TakeDamageFromNpc(damage, transform.position);
         if (droppedOre == null) return;
 
         if (targetConverter == null)

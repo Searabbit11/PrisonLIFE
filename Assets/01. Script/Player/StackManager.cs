@@ -22,6 +22,7 @@ public sealed class StackManager : MonoBehaviour
     [Header("Cash Stack Settings")]
     [SerializeField] private Transform cashStackPivot;
     [SerializeField] private float cashYOffset = 0.05f;
+    [SerializeField] private int cashValuePerPickup = 5;
     private readonly List<GameObject> cashStack = new List<GameObject>();
 
     [Header("Carry Sway Visual")]
@@ -58,6 +59,7 @@ public sealed class StackManager : MonoBehaviour
     public int HandcuffCount => handcuffItems.Count;
     public bool HasCash => cashStack.Count > 0;
     public int CashCount => cashStack.Count;
+    public int CashValuePerPickup => Mathf.Max(1, cashValuePerPickup);
 
     private Vector3 baseStackPivotLocalPos;
     private Vector3 baseHandcuffPivotLocalPos;
@@ -341,7 +343,7 @@ public sealed class StackManager : MonoBehaviour
         cash.transform.DOLocalJump(targetLocalPos, 1.5f, 1, 0.4f).SetEase(Ease.OutQuad);
         cash.transform.DOLocalRotate(Vector3.zero, 0.4f);
         
-        CurrencyManager.Instance.AddCash(1);
+        CurrencyManager.Instance.AddCash(CashValuePerPickup);
     }
 
     public GameObject PopCash()
@@ -504,5 +506,3 @@ public sealed class StackManager : MonoBehaviour
         isStopBounceActive = false;
     }
 }
-
-

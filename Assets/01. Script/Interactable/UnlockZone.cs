@@ -55,6 +55,7 @@ public sealed class UnlockZone : MonoBehaviour
     private Collider zoneCollider;
     private int activePlayerId = -1;
     private WaitForSeconds consumeWait;
+    private float consumeBlockedUntilTime;
 
     private UnlockStage CurrentStage => stages[currentStageIndex];
 
@@ -154,6 +155,11 @@ public sealed class UnlockZone : MonoBehaviour
         while (HasCurrentStage() == true && currentAmount < CurrentStage.cost)
         {
             if (HasZoneClaim(playerStack) == false) yield break;
+            if (Time.time < consumeBlockedUntilTime)
+            {
+                yield return null;
+                continue;
+            }
 
             if (playerStack.HasCash == true)
             {
@@ -183,9 +189,10 @@ public sealed class UnlockZone : MonoBehaviour
                         SFXManager.Instance.PlayUnlockFill(absorbTargetPosition);
                     }
 
-                    currentAmount++;
+                    int cashUnitValue = playerStack.CashValuePerPickup;
+                    currentAmount += cashUnitValue;
                     UpdateProgress();
-                    CurrencyManager.Instance.SpendCash(1);
+                    CurrencyManager.Instance.SpendCash(cashUnitValue);
 
                     if (currentAmount >= CurrentStage.cost)
                     {
@@ -196,6 +203,16 @@ public sealed class UnlockZone : MonoBehaviour
             }
 
             yield return consumeWait;
+        }
+    }
+
+    public void BlockCashConsume(float delay)
+    {
+        float blockDelay = Mathf.Max(0f, delay);
+        float targetTime = Time.time + blockDelay;
+        if (targetTime > consumeBlockedUntilTime)
+        {
+            consumeBlockedUntilTime = targetTime;
         }
     }
 

@@ -1,0 +1,20 @@
+Session: session-2026-04-19T02-08-9d002b0f.json
+LastUpdated: 2026-04-19T09:40:53.421Z
+
+[Prompt 1 | 2026-04-19T02:13:39.441Z]
+[아키텍처 리팩토링 요청]
+Assets/01.Script/**만 수정; 목표=의존성/책임 분리·중복 제거; 금지=동작·API·SerializeField명·파일명/위치 변경, 패키지 추가; 
+최소 diff; 출력=변경파일+파일별1줄+리스크2.
+
+[Prompt 2 | 2026-04-19T02:22:18.862Z]
+[성능 리팩토링 요청]
+Assets/01.Script/**만 수정; 목표=GC/Update/할당 최적화; 금지=동작·API·SerializeField명·파일명/위치 변경, 패키지 추가; 
+최소 diff; 출력=변경파일+파일별 1줄+리스크2.
+
+[Prompt 3 | 2026-04-19T02:52:05.437Z]
+[PrisonLIFE SFX 토글]
+  Assets/01. Script/**만 수정, SFXManager.cs 재사용, 최소 diff.
+  기능: 기존 사운드 버튼 OnClick -> SFX ON/OFF 토글, OFF면 SFX 재생 차단.
+  UI: OFF 상태에서 버튼(아이콘) 색/알파만 살짝 어둡게, ON/OFF 즉시 반영.
+  출력: 변경파일 목록 + 파일별 1줄 요약 + 인스펙터 연결 3줄.
+

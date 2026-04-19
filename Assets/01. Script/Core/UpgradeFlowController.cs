@@ -21,6 +21,8 @@ public sealed class UpgradeFlowController : MonoBehaviour
     [SerializeField] private MinerNPCSpawner minerNpcSpawner;
 
     [Header("Flow Timing")]
+    [SerializeField] private float drillNextStageConsumeDelay = 1f;
+    [SerializeField] private float minerNpcUnlockDelay = 1.5f;
     [SerializeField] private float deskNpcUnlockDelay = 2f;
 
     [Header("Startup State")]
@@ -95,7 +97,8 @@ public sealed class UpgradeFlowController : MonoBehaviour
     {
         if (stageIndex == 0 && minerNpcUpgradeZone != null)
         {
-            ActivateZone(minerNpcUpgradeZone.gameObject);
+            zone.BlockCashConsume(drillNextStageConsumeDelay);
+            DOVirtual.DelayedCall(minerNpcUnlockDelay, () => ActivateZone(minerNpcUpgradeZone.gameObject));
         }
     }
 

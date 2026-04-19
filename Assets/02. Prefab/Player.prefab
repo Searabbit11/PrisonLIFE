@@ -992,6 +992,7 @@ GameObject:
   - component: {fileID: 5193498634419146491}
   - component: {fileID: 28697594884229296}
   - component: {fileID: 596175894074982796}
+  - component: {fileID: 5604794823325634009}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1093,7 +1094,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 80
   m_CollisionDetection: 0
@@ -1111,16 +1112,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   joystick: {fileID: 0}
   movementSpeed: 5
+  movementCollisionMask:
+    serializedVersion: 2
+    m_Bits: 512
+  collisionSkin: 0.02
   baseMiningDetectionBoxSize: {x: -0.37, y: 1.54, z: 0.96}
   miningDetectionOffset: {x: 0, y: 0.93, z: 0.54}
   resourceLayer:
     serializedVersion: 2
     m_Bits: 128
-  drill1DetectionBoxSize: {x: 0.74, y: 1.6, z: 1.44}
-  drill1DetectionOffset: {x: 0, y: 0.88, z: 0.82}
+  drill1DetectionBoxSize: {x: 0.62, y: 1.6, z: 1.44}
+  drill1DetectionOffset: {x: 0, y: 0.88, z: 0.76}
   drill2DetectionBoxSize: {x: 2.74, y: 2.21, z: 3.68}
   drill2DetectionOffset: {x: 0, y: 0.65, z: 1.95}
-  drillHitDelay: 0.02
+  drillHitDelay: 0.025
   animator: {fileID: 5321861755812434914}
 --- !u!114 &5193498634419146491
 MonoBehaviour:
@@ -1170,9 +1175,16 @@ MonoBehaviour:
   swayDirectionLerp: 0
   swayMoveLerp: 0
   swayReturnDuration: 0
-  curveBackMaxOffset: 1
   curveSpeedForMaxOffset: 80
   curveVelocityLerp: 60
+  rodBendMaxOffset: 1.3
+  rodBendExponent: 1.8
+  rodBendVelocityLerp: 14
+  stackFollowLerp: 35
+  stopBounceBendAmount: 0.3
+  stopBounceDuration: 0.5
+  stopBounceOscillations: 1
+  stopBounceDamping: 0.5
   floatingText: {fileID: 4432429535959322248}
 --- !u!114 &596175894074982796
 MonoBehaviour:
@@ -1197,6 +1209,29 @@ MonoBehaviour:
   grantOreKey: 286
   grantHandcuffKey: 287
   grantCashKey: 288
+--- !u!136 &5604794823325634009
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2648880307225557099}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.36193106
+  m_Height: 1.7958254
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.9347561, z: 0.011324257}
 --- !u!1 &2731738395971518657
 GameObject:
   m_ObjectHideFlags: 0

@@ -8,6 +8,7 @@ public sealed class IdleGuideController : MonoBehaviour
     [Header("References")]
     [SerializeField] private GameObject guideRoot;
     [SerializeField] private FloatingJoystick joystick;
+    [SerializeField] private EndingUIController endingUIController;
     [SerializeField] private bool ignoreUIRaycast = true;
 
     [Header("Idle Settings")]
@@ -25,6 +26,10 @@ public sealed class IdleGuideController : MonoBehaviour
 
     private void Awake()
     {
+        if (endingUIController == null)
+        {
+            endingUIController = FindFirstObjectByType<EndingUIController>();
+        }
         TryResolveJoystick(true);
     }
 
@@ -89,6 +94,11 @@ public sealed class IdleGuideController : MonoBehaviour
 
     private bool IsBlockedByCinematicOrTutorial()
     {
+        if (endingUIController != null && endingUIController.IsEndingVisible)
+        {
+            return true;
+        }
+
         if (hideWhileCameraFocusing && CameraController.Instance != null && CameraController.Instance.IsFocusing)
         {
             return true;
