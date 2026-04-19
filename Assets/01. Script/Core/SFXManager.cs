@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public sealed class SFXManager : MonoBehaviour
 {
@@ -6,6 +7,12 @@ public sealed class SFXManager : MonoBehaviour
 
     [Header("Global")]
     [SerializeField] private float masterVolume = 1f;
+
+    [Header("Toggle UI")]
+    [SerializeField] private Image sfxIconImage;
+    [SerializeField] private Color sfxOnColor = Color.white;
+    [SerializeField] private Color sfxOffColor = new Color(0.5f, 0.5f, 0.5f, 0.8f);
+    public bool IsMuted { get; private set; }
 
     [Header("Mining")]
     [SerializeField] private AudioClip pickaxeMineClip;
@@ -127,6 +134,15 @@ public sealed class SFXManager : MonoBehaviour
         Play2D(endingShowClip);
     }
 
+    public void ToggleSFX()
+    {
+        IsMuted = !IsMuted;
+        if (sfxIconImage != null)
+        {
+            sfxIconImage.color = IsMuted ? sfxOffColor : sfxOnColor;
+        }
+    }
+
     private bool PassCooldown(ref float lastTime, float cooldown)
     {
         if (Time.time - lastTime < Mathf.Max(0f, cooldown)) return false;
@@ -136,16 +152,13 @@ public sealed class SFXManager : MonoBehaviour
 
     private void Play2D(AudioClip clip)
     {
-        if (clip == null) return;
-        if (masterVolume <= 0f) return;
-        if (uiAudioSource == null) return;
+        if (clip == null || IsMuted || masterVolume <= 0f || uiAudioSource == null) return;
         uiAudioSource.PlayOneShot(clip, masterVolume);
     }
 
     private void PlayAtPosition(AudioClip clip, Vector3 position)
     {
-        if (clip == null) return;
-        if (masterVolume <= 0f) return;
+        if (clip == null || IsMuted || masterVolume <= 0f) return;
         AudioSource.PlayClipAtPoint(clip, position, masterVolume);
     }
 }
