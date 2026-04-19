@@ -10,6 +10,7 @@ public sealed class PlayerController : MonoBehaviour
     private const float RotationSpeed = 15f;
     private const float InputDeadZoneSqr = 0.0025f; // 0.05 * 0.05
     private const int MaxMiningHits = 32;
+    private const float JoystickSearchInterval = 1f;
 
     [SerializeField] private FloatingJoystick joystick;
     [SerializeField] private float movementSpeed = 5f;
@@ -47,7 +48,7 @@ public sealed class PlayerController : MonoBehaviour
     private readonly Collider[] miningHitBuffer = new Collider[MaxMiningHits];
     private readonly ResourceNode[] miningNodeBuffer = new ResourceNode[MaxMiningHits];
     private WaitForSeconds drillHitWait;
-    private bool joystickSearchAttempted;
+    private float nextJoystickSearchTime;
 
     public bool IsInMiningZone { get; set; }
 
@@ -87,10 +88,7 @@ public sealed class PlayerController : MonoBehaviour
         stackManager = GetComponent<StackManager>();
         equipmentManager = GetComponent<EquipmentManager>();
         mainCam = Camera.main;
-        if (joystick == null)
-        {
-            joystick = FindFirstObjectByType<FloatingJoystick>();
-        }
+        TryResolveJoystick(true);
         drillHitWait = new WaitForSeconds(drillHitDelay);
     }
 
@@ -161,12 +159,7 @@ public sealed class PlayerController : MonoBehaviour
 
         if (joystick == null)
         {
-            if (!joystickSearchAttempted)
-            {
-                joystickSearchAttempted = true;
-                joystick = FindFirstObjectByType<FloatingJoystick>();
-            }
-
+            TryResolveJoystick(false);
             if (joystick == null)
             {
                 moveDirection = Vector3.zero;
@@ -185,6 +178,15 @@ public sealed class PlayerController : MonoBehaviour
         Vector3 localInputDirection = new Vector3(input.x, 0f, input.y);
 
         moveDirection = (Quaternion.Euler(0f, cameraYaw, 0f) * localInputDirection).normalized;
+    }
+
+    private void TryResolveJoystick(bool immediate)
+    {
+        if (joystick != null) return;
+        if (!immediate && Time.unscaledTime < nextJoystickSearchTime) return;
+
+        joystick = FindFirstObjectByType<FloatingJoystick>();
+        nextJoystickSearchTime = Time.unscaledTime + JoystickSearchInterval;
     }
 
     private void HandleMovement()

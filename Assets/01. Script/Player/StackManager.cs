@@ -233,6 +233,37 @@ public sealed class StackManager : MonoBehaviour
         }
     }
 
+    private void UpdateDynamicStackMovement(List<Component> items, Transform rootPivot, float itemYOffset, bool applyCurve, Vector3 backDir, float speedRatio, float lerpAmount)
+    {
+        int itemCount = items.Count;
+        if (rootPivot == null || itemCount == 0) return;
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            Component currentComponent = items[i];
+            if (currentComponent == null) continue;
+
+            Transform current = currentComponent.transform;
+            Component prevComponent = i == 0 ? null : items[i - 1];
+            Transform target = i == 0 ? rootPivot : (prevComponent != null ? prevComponent.transform : null);
+            if (target == null) continue;
+
+            Vector3 targetPos = target.position + (Vector3.up * itemYOffset);
+
+            if (applyCurve && itemCount > 1)
+            {
+                float t = (i + 1f) / itemCount;
+                float bendProfile = Mathf.Pow(t, Mathf.Max(1f, rodBendExponent));
+                float baseBend = rodBendMaxOffset * speedRatio * bendProfile;
+                float bounceBend = stopBounceBendOffsetAmount * bendProfile;
+                targetPos += backDir * (baseBend + bounceBend);
+            }
+
+            current.position = Vector3.Lerp(current.position, targetPos, lerpAmount);
+            current.rotation = Quaternion.Lerp(current.rotation, target.rotation, lerpAmount);
+        }
+    }
+
     private void UpdateStackMovement() { }
     private void UpdateHandcuffStackMovement() { }
     private void UpdateCashStackMovement() { }

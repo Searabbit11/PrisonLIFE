@@ -3,6 +3,8 @@ using UnityEngine.UI;
 
 public sealed class IdleGuideController : MonoBehaviour
 {
+    private const float JoystickSearchInterval = 1f;
+
     [Header("References")]
     [SerializeField] private GameObject guideRoot;
     [SerializeField] private FloatingJoystick joystick;
@@ -19,15 +21,11 @@ public sealed class IdleGuideController : MonoBehaviour
 
     private float lastInputTime;
     private bool isGuideVisible;
-    private bool joystickSearchAttempted;
+    private float nextJoystickSearchTime;
 
     private void Awake()
     {
-        if (joystick == null)
-        {
-            joystickSearchAttempted = true;
-            joystick = FindFirstObjectByType<FloatingJoystick>();
-        }
+        TryResolveJoystick(true);
     }
 
 
@@ -65,11 +63,7 @@ public sealed class IdleGuideController : MonoBehaviour
 
     private bool HasAnyInput()
     {
-        if (joystick == null && !joystickSearchAttempted)
-        {
-            joystickSearchAttempted = true;
-            joystick = FindFirstObjectByType<FloatingJoystick>();
-        }
+        if (joystick == null) TryResolveJoystick(false);
 
         if (joystick != null && joystick.Direction.sqrMagnitude > joystickDeadZoneSqr)
         {
@@ -82,6 +76,15 @@ public sealed class IdleGuideController : MonoBehaviour
         }
 
         return Input.GetMouseButton(0);
+    }
+
+    private void TryResolveJoystick(bool immediate)
+    {
+        if (joystick != null) return;
+        if (!immediate && Time.unscaledTime < nextJoystickSearchTime) return;
+
+        joystick = FindFirstObjectByType<FloatingJoystick>();
+        nextJoystickSearchTime = Time.unscaledTime + JoystickSearchInterval;
     }
 
     private bool IsBlockedByCinematicOrTutorial()

@@ -3,7 +3,7 @@ using UnityEngine;
 public sealed class CashCollectorZone : MonoBehaviour
 {
     [SerializeField] private DeliveryDesk deliveryDesk;
-    [SerializeField] private float collectInterval = 0.05f;
+    [SerializeField] private float collectInterval = 0.025f;
     private float nextCollectTime;
 
     private void OnTriggerStay(Collider other)
